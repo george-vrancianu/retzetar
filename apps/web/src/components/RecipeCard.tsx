@@ -1,3 +1,12 @@
+import {
+  ActionLink,
+  Button,
+  Card,
+  FlexCol,
+  Heading,
+  Media,
+  Text,
+} from "@retzetar/ui";
 import { Link } from "react-router-dom";
 import type { Recipe } from "../lib/api.ts";
 
@@ -9,45 +18,32 @@ export function RecipeCard({
   favoriteAction?: { label: string; onClick: () => void; pending?: boolean };
 }) {
   return (
-    <article className="card flex h-full flex-col overflow-hidden p-0">
-      {recipe.imageUrl ? (
-        <img
-          className="h-44 w-full object-cover"
-          src={recipe.imageUrl}
-          alt=""
-        />
-      ) : (
-        <div
-          className="flex h-44 items-center justify-center bg-herb-50 text-herb-700"
-          aria-hidden="true"
-        >
-          Recipe
-        </div>
-      )}
-      <div className="flex flex-1 flex-col p-5">
-        <h2 className="text-xl font-bold text-slate-900">
-          <Link className="hover:text-herb-700" to={`/recipes/${recipe.id}`}>
+    <Card as="article" variant="flush" className="flex h-full flex-col">
+      <Media src={recipe.imageUrl} alt="" />
+      <FlexCol className="flex-1 p-5">
+        <Heading level={2} variant="card" className="text-slate-900">
+          <ActionLink as={Link} to={`/recipes/${recipe.id}`} variant="title">
             {recipe.title}
-          </Link>
-        </h2>
-        <p className="mt-2 line-clamp-3 flex-1 text-sm text-slate-600">
+          </ActionLink>
+        </Heading>
+        <Text className="line-clamp-3 flex-1" variant="subtle">
           {recipe.description}
-        </p>
-        <p className="mt-4 text-sm font-medium text-slate-500">
+        </Text>
+        <Text className="font-medium" variant="subtle">
           {recipe.prepMinutes + recipe.cookMinutes} min · {recipe.servings}{" "}
           servings
-        </p>
+        </Text>
         {favoriteAction && (
-          <button
+          <Button
             type="button"
-            className="btn-secondary mt-4"
+            variant="secondary"
             disabled={favoriteAction.pending}
             onClick={favoriteAction.onClick}
           >
             {favoriteAction.label}
-          </button>
+          </Button>
         )}
-      </div>
-    </article>
+      </FlexCol>
+    </Card>
   );
 }

@@ -1,4 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Alert,
+  Button,
+  Card,
+  Form,
+  FormField,
+  Heading,
+  Input,
+  Page,
+  Status,
+  Text,
+  Textarea,
+} from "@retzetar/ui";
 import { useState, type FormEvent } from "react";
 import { ErrorState, LoadingState } from "../components/QueryState.tsx";
 import { api, type UserProfile } from "../lib/api.ts";
@@ -40,78 +53,55 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
   };
 
   return (
-    <form className="card mt-8 max-w-2xl space-y-5" onSubmit={submit}>
-      <label className="block font-semibold">
-        Display name
-        <input
-          className="field mt-1"
+    <Card as={Form} className="mt-8 max-w-2xl space-y-5" onSubmit={submit}>
+      <FormField label="Display name">
+        <Input
           value={displayName}
           maxLength={80}
           required
           onChange={(event) => setDisplayName(event.target.value)}
         />
-      </label>
-      <label className="block font-semibold">
-        Email
-        <input
-          className="field mt-1 bg-slate-50"
-          value={profile.email}
-          disabled
-        />
-        <span className="mt-1 block text-xs font-normal text-slate-500">
-          Email changes are managed by authentication settings.
-        </span>
-      </label>
-      <label className="block font-semibold">
-        About you
-        <textarea
-          className="field mt-1 min-h-28"
+      </FormField>
+      <FormField
+        label="Email"
+        hint="Email changes are managed by authentication settings."
+      >
+        <Input className="bg-slate-50" value={profile.email} disabled />
+      </FormField>
+      <FormField label="About you">
+        <Textarea
           value={bio}
           maxLength={500}
           onChange={(event) => setBio(event.target.value)}
         />
-      </label>
-      <label className="block font-semibold">
-        Diets
-        <input
-          className="field mt-1"
+      </FormField>
+      <FormField label="Diets">
+        <Input
           value={diets}
           placeholder="Vegetarian, gluten-free"
           onChange={(event) => setDiets(event.target.value)}
         />
-      </label>
-      <label className="block font-semibold">
-        Allergens
-        <input
-          className="field mt-1"
+      </FormField>
+      <FormField label="Allergens">
+        <Input
           value={allergens}
           placeholder="Peanuts, shellfish"
           onChange={(event) => setAllergens(event.target.value)}
         />
-      </label>
-      <label className="block font-semibold">
-        Disliked ingredients
-        <input
-          className="field mt-1"
+      </FormField>
+      <FormField label="Disliked ingredients">
+        <Input
           value={disliked}
           placeholder="Cilantro, olives"
           onChange={(event) => setDisliked(event.target.value)}
         />
-      </label>
-      <button className="btn-primary" type="submit" disabled={update.isPending}>
+      </FormField>
+      <Button type="submit" disabled={update.isPending}>
         {update.isPending ? "Saving…" : "Save profile"}
-      </button>
-      {update.isSuccess && (
-        <p className="text-sm font-semibold text-herb-700" role="status">
-          Profile saved.
-        </p>
-      )}
-      {update.isError && (
-        <p className="text-sm text-red-700" role="alert">
-          Profile could not be saved.
-        </p>
-      )}
-    </form>
+      </Button>
+      {update.isSuccess && <Status>Profile saved.</Status>}
+      {update.isError && <Alert>Profile could not be saved.</Alert>}
+    </Card>
   );
 }
 
@@ -127,14 +117,12 @@ export function SettingsPage() {
     );
 
   return (
-    <section>
-      <h1 className="text-3xl font-black sm:text-4xl">
-        Profile and food preferences
-      </h1>
-      <p className="mt-2 text-slate-600">
+    <Page>
+      <Heading>Profile and food preferences</Heading>
+      <Text className="mt-2" variant="muted">
         Personalize recipe suggestions and flag ingredients you avoid.
-      </p>
+      </Text>
       <ProfileForm profile={profile.data} />
-    </section>
+    </Page>
   );
 }

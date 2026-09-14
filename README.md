@@ -7,7 +7,8 @@ Retzetar helps people discover recipes, track pantry stock, save favorites, and 
 This repository is an npm-workspaces monorepo:
 
 - `apps/api` — NestJS 12 on Fastify, Better Auth cookie sessions, Zod request/config validation, Swagger, and Drizzle ORM on PostgreSQL.
-- `apps/web` — React 19 and Vite, React Router, TanStack Query, Zustand workflow state, Better Auth client, and Tailwind CSS v4.
+- `apps/web` — React 19 and Vite, React Router, TanStack Query, Zustand workflow state, and Better Auth client.
+- `packages/ui` — shared semantic React primitives plus the Tailwind CSS v4 theme and base styles.
 
 The API uses text IDs for Better Auth users and UUIDs for application entities. User-owned queries are guarded by a Better Auth session and scoped by user ID. Dashboard widgets are programmatic: the API validates stored widget types/settings against its registry, while Zustand holds only the editable layout draft before the authenticated API persists it. The web app renders only entries in its own component registry.
 

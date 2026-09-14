@@ -1,4 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ActionLink,
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  FlexRow,
+  Form,
+  FormField,
+  Grid,
+  Heading,
+  Input,
+  List,
+  Page,
+  Section,
+  Text,
+} from "@retzetar/ui";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -26,10 +43,10 @@ function CartList() {
   };
 
   return (
-    <section>
-      <h1 className="text-3xl font-black sm:text-4xl">Shopping carts</h1>
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[1fr_22rem]">
-        <div>
+    <Page>
+      <Heading>Shopping carts</Heading>
+      <Grid variant="sidebar" className="mt-8 lg:grid-cols-[1fr_22rem]">
+        <Section>
           {carts.isPending ? (
             <LoadingState />
           ) : carts.isError ? (
@@ -40,50 +57,51 @@ function CartList() {
           ) : carts.data.length === 0 ? (
             <EmptyState title="No carts yet" />
           ) : (
-            <ul className="space-y-3">
+            <List variant="stack">
               {carts.data.map((cart) => (
-                <li className="card" key={cart.id}>
-                  <Link
-                    className="text-lg font-bold text-herb-700 hover:underline"
+                <Card as="li" key={cart.id}>
+                  <ActionLink
+                    as={Link}
+                    className="text-lg"
                     to={`/carts/${cart.id}`}
+                    variant="title"
                   >
                     {cart.name}
-                  </Link>
-                  <p className="text-sm capitalize text-slate-500">
+                  </ActionLink>
+                  <Text className="capitalize" variant="subtle">
                     {cart.status}
-                  </p>
-                </li>
+                  </Text>
+                </Card>
               ))}
-            </ul>
+            </List>
           )}
-        </div>
-        <form className="card" onSubmit={submit}>
-          <h2 className="text-xl font-bold">New cart</h2>
-          <label className="mt-4 block font-semibold">
-            Name
-            <input
-              className="field mt-1"
+        </Section>
+        <Card as={Form} onSubmit={submit}>
+          <Heading level={2} variant="card">
+            New cart
+          </Heading>
+          <FormField className="mt-4" label="Name">
+            <Input
               value={name}
               maxLength={80}
               onChange={(event) => setName(event.target.value)}
               required
             />
-          </label>
-          <button
-            className="btn-primary mt-4 w-full"
+          </FormField>
+          <Button
+            className="mt-4"
+            block
             type="submit"
             disabled={create.isPending}
           >
             Create cart
-          </button>
+          </Button>
           {create.isError && (
-            <p className="mt-3 text-sm text-red-700" role="alert">
-              Could not create the cart.
-            </p>
+            <Alert className="mt-3">Could not create the cart.</Alert>
           )}
-        </form>
-      </div>
-    </section>
+        </Card>
+      </Grid>
+    </Page>
   );
 }
 
@@ -101,41 +119,44 @@ function CartDetail({ id }: { id: string }) {
       />
     );
   return (
-    <section>
-      <Link className="font-semibold text-herb-700" to="/carts">
+    <Page>
+      <ActionLink as={Link} to="/carts">
         ← All carts
-      </Link>
-      <h1 className="mt-5 text-3xl font-black sm:text-4xl">{cart.data.name}</h1>
-      <div className="mt-8">
+      </ActionLink>
+      <Heading className="mt-5">{cart.data.name}</Heading>
+      <Section spacing="lg">
         {!cart.data.items?.length ? (
           <EmptyState
             title="This cart is empty"
             action={
-              <Link className="text-herb-700 underline" to="/recipes">
+              <ActionLink as={Link} to="/recipes">
                 Choose a recipe
-              </Link>
+              </ActionLink>
             }
           />
         ) : (
-          <ul className="space-y-3">
+          <List variant="stack">
             {cart.data.items.map((item) => (
-              <li className="card flex items-center gap-3" key={item.id}>
-                <input
-                  type="checkbox"
-                  checked={item.checked}
-                  readOnly
-                  aria-label={`Mark ${item.name} complete`}
-                />
-                <span className="flex-1 font-semibold">{item.name}</span>
-                <span className="text-slate-500">
-                  {item.quantity} {item.unit}
-                </span>
-              </li>
+              <Card as="li" key={item.id}>
+                <FlexRow>
+                  <Checkbox
+                    checked={item.checked}
+                    readOnly
+                    aria-label={`${item.name}, ${item.checked ? "complete" : "not complete"}`}
+                  />
+                  <Text as="span" className="flex-1" variant="label">
+                    {item.name}
+                  </Text>
+                  <Text as="span" variant="muted">
+                    {item.quantity} {item.unit}
+                  </Text>
+                </FlexRow>
+              </Card>
             ))}
-          </ul>
+          </List>
         )}
-      </div>
-    </section>
+      </Section>
+    </Page>
   );
 }
 

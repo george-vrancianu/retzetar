@@ -1,3 +1,13 @@
+import {
+  ActionLink,
+  AppHeader,
+  AppHeaderInner,
+  AppMain,
+  AppShell,
+  Button,
+  FlexRow,
+  Navigation,
+} from "@retzetar/ui";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { authClient } from "../lib/auth-client.ts";
 
@@ -20,57 +30,45 @@ export function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-herb-100 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
-          <Link
-            to="/recipes"
-            className="text-2xl font-black tracking-tight text-herb-700"
-          >
+    <AppShell>
+      <AppHeader>
+        <AppHeaderInner>
+          <ActionLink as={Link} to="/recipes" variant="brand">
             Retzetar
-          </Link>
-          <nav
+          </ActionLink>
+          <Navigation
             aria-label="Main navigation"
-            className="order-3 flex w-full gap-1 overflow-x-auto sm:order-2 sm:w-auto"
+            className="order-3 w-full overflow-x-auto sm:order-2 sm:w-auto"
           >
             {navigation
               .filter(([, path]) => session.data || path === "/recipes")
               .map(([label, path]) => (
-                <NavLink
-                  key={path}
-                  to={path}
-                  className={({ isActive }) =>
-                    `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold ${
-                      isActive
-                        ? "bg-herb-100 text-herb-700"
-                        : "text-slate-600 hover:bg-slate-100"
-                    }`
-                  }
-                >
+                <ActionLink as={NavLink} key={path} to={path} variant="nav">
                   {label}
-                </NavLink>
+                </ActionLink>
               ))}
-          </nav>
-          <div className="order-2 sm:order-3">
+          </Navigation>
+          <FlexRow className="order-2 sm:order-3">
             {session.data ? (
-              <button
+              <Button
                 type="button"
-                className="text-sm font-semibold text-slate-600 hover:text-herb-700"
+                variant="text"
+                className="text-sm text-slate-600 hover:text-herb-700"
                 onClick={() => void signOut()}
               >
                 Sign out
-              </button>
+              </Button>
             ) : (
-              <Link className="btn-primary" to="/auth">
+              <ActionLink as={Link} to="/auth" variant="primary">
                 Sign in
-              </Link>
+              </ActionLink>
             )}
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">
+          </FlexRow>
+        </AppHeaderInner>
+      </AppHeader>
+      <AppMain>
         <Outlet />
-      </main>
-    </div>
+      </AppMain>
+    </AppShell>
   );
 }

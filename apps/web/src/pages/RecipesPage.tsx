@@ -1,4 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
+import {
+  Button,
+  Card,
+  Form,
+  Grid,
+  Heading,
+  Input,
+  Navigation,
+  Page,
+  Section,
+  Text,
+  VisuallyHidden,
+} from "@retzetar/ui";
 import { useState, type FormEvent } from "react";
 import {
   EmptyState,
@@ -24,34 +37,35 @@ export function RecipesPage() {
   };
 
   return (
-    <section>
-      <div className="rounded-3xl bg-herb-700 px-6 py-10 text-white sm:px-10">
-        <p className="font-semibold text-herb-100">Cook with confidence</p>
-        <h1 className="mt-2 max-w-2xl text-4xl font-black sm:text-5xl">
+    <Page>
+      <Card variant="hero">
+        <Text variant="eyebrow">Cook with confidence</Text>
+        <Heading variant="display" className="mt-2 max-w-2xl">
           Find your next recipe
-        </h1>
-        <form
+        </Heading>
+        <Form
+          spacing="none"
           className="mt-6 flex max-w-xl flex-col gap-2 sm:flex-row"
           role="search"
           onSubmit={submit}
         >
-          <label className="sr-only" htmlFor="recipe-search">
+          <VisuallyHidden as="label" htmlFor="recipe-search">
             Search recipes
-          </label>
-          <input
+          </VisuallyHidden>
+          <Input
             id="recipe-search"
-            className="field text-slate-900"
+            className="text-slate-900"
             type="search"
             placeholder="Try pasta, soup, or quick dinner"
             value={input}
             onChange={(event) => setInput(event.target.value)}
           />
-          <button className="btn-secondary" type="submit">
+          <Button variant="secondary" type="submit">
             Search
-          </button>
-        </form>
-      </div>
-      <div className="mt-8">
+          </Button>
+        </Form>
+      </Card>
+      <Section spacing="lg">
         {query.isPending ? (
           <LoadingState label="Finding recipes" />
         ) : query.isError ? (
@@ -68,9 +82,9 @@ export function RecipesPage() {
             }
             action={
               search ? (
-                <button
+                <Button
                   type="button"
-                  className="btn-secondary"
+                  variant="secondary"
                   onClick={() => {
                     setInput("");
                     setSearch("");
@@ -78,49 +92,50 @@ export function RecipesPage() {
                   }}
                 >
                   Clear search
-                </button>
+                </Button>
               ) : undefined
             }
           />
         ) : (
           <>
-            <p className="mb-4 text-sm text-slate-500">
+            <Text className="mb-4" variant="subtle">
               {query.data.pagination.total} recipes
-            </p>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            </Text>
+            <Grid>
               {query.data.items.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} />
               ))}
-            </div>
+            </Grid>
             {query.data.pagination.pages > 1 && (
-              <nav
-                className="mt-8 flex items-center justify-center gap-4"
+              <Navigation
+                gap="lg"
+                className="mt-8 items-center justify-center"
                 aria-label="Recipe pages"
               >
-                <button
-                  className="btn-secondary"
+                <Button
+                  variant="secondary"
                   type="button"
                   disabled={page === 1}
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                 >
                   Previous
-                </button>
-                <span className="text-sm text-slate-600">
+                </Button>
+                <Text as="span" variant="small" className="text-slate-600">
                   Page {page} of {query.data.pagination.pages}
-                </span>
-                <button
-                  className="btn-secondary"
+                </Text>
+                <Button
+                  variant="secondary"
                   type="button"
                   disabled={page === query.data.pagination.pages}
                   onClick={() => setPage((current) => current + 1)}
                 >
                   Next
-                </button>
-              </nav>
+                </Button>
+              </Navigation>
             )}
           </>
         )}
-      </div>
-    </section>
+      </Section>
+    </Page>
   );
 }

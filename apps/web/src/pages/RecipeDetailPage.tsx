@@ -1,4 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ActionLink,
+  Alert,
+  Button,
+  Card,
+  FlexCol,
+  FlexRow,
+  FormField,
+  Grid,
+  Heading,
+  List,
+  ListItem,
+  Media,
+  Option,
+  Page,
+  Section,
+  Select,
+  Status,
+  Text,
+} from "@retzetar/ui";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "../components/QueryState.tsx";
@@ -40,110 +60,115 @@ export function RecipeDetailPage() {
     );
 
   return (
-    <article>
-      <Link className="font-semibold text-herb-700" to="/recipes">
+    <Page as="article">
+      <ActionLink as={Link} to="/recipes">
         ← All recipes
-      </Link>
-      <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
-        <div>
+      </ActionLink>
+      <Grid variant="detail" className="mt-5">
+        <Section>
           {recipe.data.imageUrl && (
-            <img
-              className="max-h-96 w-full rounded-3xl object-cover"
-              src={recipe.data.imageUrl}
-              alt=""
-            />
+            <Media variant="detail" src={recipe.data.imageUrl} alt="" />
           )}
-          <h1 className="mt-6 text-4xl font-black">{recipe.data.title}</h1>
-          <p className="mt-3 text-lg text-slate-600">
+          <Heading className="mt-6" variant="display">
+            {recipe.data.title}
+          </Heading>
+          <Text className="mt-3 text-lg" variant="muted">
             {recipe.data.description}
-          </p>
-          <section className="mt-8">
-            <h2 className="text-2xl font-bold">Method</h2>
-            <ol className="mt-4 space-y-4">
+          </Text>
+          <Section spacing="lg">
+            <Heading level={2} variant="section">
+              Method
+            </Heading>
+            <List ordered variant="stack" className="mt-4">
               {recipe.data.steps.map((step) => (
-                <li className="card flex gap-4" key={step.id}>
-                  <span className="font-black text-herb-700">
-                    {step.position}
-                  </span>
-                  <p>{step.instruction}</p>
-                </li>
+                <Card as="li" key={step.id}>
+                  <FlexRow align="start" gap="lg">
+                    <Text as="span" className="font-black text-herb-700">
+                      {step.position}
+                    </Text>
+                    <Text>{step.instruction}</Text>
+                  </FlexRow>
+                </Card>
               ))}
-            </ol>
-          </section>
-        </div>
-        <aside className="space-y-5">
-          <section className="card">
-            <h2 className="text-xl font-bold">Ingredients</h2>
-            <ul className="mt-4 space-y-2">
+            </List>
+          </Section>
+        </Section>
+        <FlexCol as="aside" gap="lg">
+          <Card as="section">
+            <Heading level={2} variant="card">
+              Ingredients
+            </Heading>
+            <List variant="compact" className="mt-4">
               {recipe.data.ingredients.map((item) => (
-                <li className="flex justify-between gap-3" key={item.id}>
-                  <span>{item.name}</span>
-                  <span className="text-slate-500">
-                    {item.quantity} {item.unit}
-                  </span>
-                </li>
+                <ListItem key={item.id}>
+                  <FlexRow align="between">
+                    <Text as="span">{item.name}</Text>
+                    <Text as="span" variant="muted">
+                      {item.quantity} {item.unit}
+                    </Text>
+                  </FlexRow>
+                </ListItem>
               ))}
-            </ul>
-          </section>
+            </List>
+          </Card>
           {session.data ? (
-            <section className="card space-y-3">
-              <button
-                className="btn-secondary w-full"
-                type="button"
-                disabled={favorite.isPending}
-                onClick={() => favorite.mutate()}
-              >
-                {favorite.isSuccess ? "Saved!" : "Save favorite"}
-              </button>
-              {carts.data && carts.data.length > 0 ? (
-                <>
-                  <label className="block font-semibold">
-                    Shopping cart
-                    <select
-                      className="field mt-1"
-                      value={cartId}
-                      onChange={(event) => setCartId(event.target.value)}
+            <Card as="section">
+              <FlexCol>
+                <Button
+                  block
+                  variant="secondary"
+                  type="button"
+                  disabled={favorite.isPending}
+                  onClick={() => favorite.mutate()}
+                >
+                  {favorite.isSuccess ? "Saved!" : "Save favorite"}
+                </Button>
+                {carts.data && carts.data.length > 0 ? (
+                  <>
+                    <FormField label="Shopping cart">
+                      <Select
+                        value={cartId}
+                        onChange={(event) => setCartId(event.target.value)}
+                      >
+                        <Option value="">Choose a cart</Option>
+                        {carts.data.map((cart) => (
+                          <Option key={cart.id} value={cart.id}>
+                            {cart.name}
+                          </Option>
+                        ))}
+                      </Select>
+                    </FormField>
+                    <Button
+                      block
+                      type="button"
+                      disabled={!cartId || addMissing.isPending}
+                      onClick={() => addMissing.mutate()}
                     >
-                      <option value="">Choose a cart</option>
-                      {carts.data.map((cart) => (
-                        <option key={cart.id} value={cart.id}>
-                          {cart.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    className="btn-primary w-full"
-                    type="button"
-                    disabled={!cartId || addMissing.isPending}
-                    onClick={() => addMissing.mutate()}
-                  >
-                    Add missing ingredients
-                  </button>
-                </>
-              ) : (
-                <Link className="btn-primary w-full" to="/carts">
-                  Create a cart
-                </Link>
-              )}
-              {addMissing.isSuccess && (
-                <p className="text-sm text-herb-700" role="status">
-                  Added {addMissing.data.added.length} missing ingredients.
-                </p>
-              )}
-              {(favorite.isError || addMissing.isError) && (
-                <p className="text-sm text-red-700" role="alert">
-                  That action failed. Please try again.
-                </p>
-              )}
-            </section>
+                      Add missing ingredients
+                    </Button>
+                  </>
+                ) : (
+                  <ActionLink as={Link} block to="/carts" variant="primary">
+                    Create a cart
+                  </ActionLink>
+                )}
+                {addMissing.isSuccess && (
+                  <Status>
+                    Added {addMissing.data.added.length} missing ingredients.
+                  </Status>
+                )}
+                {(favorite.isError || addMissing.isError) && (
+                  <Alert>That action failed. Please try again.</Alert>
+                )}
+              </FlexCol>
+            </Card>
           ) : (
-            <Link className="btn-primary w-full" to="/auth">
+            <ActionLink as={Link} block to="/auth" variant="primary">
               Sign in to save or shop
-            </Link>
+            </ActionLink>
           )}
-        </aside>
-      </div>
-    </article>
+        </FlexCol>
+      </Grid>
+    </Page>
   );
 }

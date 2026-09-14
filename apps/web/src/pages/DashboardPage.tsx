@@ -1,4 +1,17 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  FlexCol,
+  FlexRow,
+  Grid,
+  Heading,
+  Page,
+  PageHeader,
+  Text,
+} from "@retzetar/ui";
 import { useEffect } from "react";
 import { ErrorState, LoadingState } from "../components/QueryState.tsx";
 import { api } from "../lib/api.ts";
@@ -54,107 +67,100 @@ export function DashboardPage() {
   );
 
   return (
-    <section>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black sm:text-4xl">
-            Your kitchen at a glance
-          </h1>
-          <p className="mt-2 text-slate-600">Pick up where you left off.</p>
-        </div>
+    <Page>
+      <PageHeader>
+        <FlexCol gap="none">
+          <Heading>Your kitchen at a glance</Heading>
+          <Text className="mt-2" variant="muted">
+            Pick up where you left off.
+          </Text>
+        </FlexCol>
         {editing ? (
-          <div className="flex gap-2">
-            <button
-              className="btn-secondary"
-              type="button"
-              onClick={cancelEditing}
-            >
+          <FlexRow gap="sm">
+            <Button variant="secondary" type="button" onClick={cancelEditing}>
               Cancel
-            </button>
-            <button
-              className="btn-primary"
+            </Button>
+            <Button
               type="button"
               disabled={!dirty || save.isPending}
               onClick={() => save.mutate()}
             >
               {save.isPending ? "Saving…" : "Save layout"}
-            </button>
-          </div>
+            </Button>
+          </FlexRow>
         ) : (
-          <button
-            className="btn-secondary"
-            type="button"
-            onClick={beginEditing}
-          >
+          <Button variant="secondary" type="button" onClick={beginEditing}>
             Customize dashboard
-          </button>
+          </Button>
         )}
-      </div>
+      </PageHeader>
       {save.isError && (
-        <p
-          className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800"
-          role="alert"
-        >
+        <Alert className="mt-4">
           The dashboard layout could not be saved. Your draft is still
           available.
-        </p>
+        </Alert>
       )}
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
+      <Grid variant="two" className="mt-8">
         {widgets.map((configuration, index) => {
           const Widget = FRONTEND_WIDGET_REGISTRY[configuration.type];
           const definition = query.data.registry.find(
             ({ type }) => type === configuration.type,
           );
           return (
-            <article
-              className={`card ${editing && !configuration.enabled ? "opacity-60" : ""}`}
+            <Card
+              as="article"
+              className={editing && !configuration.enabled ? "opacity-60" : ""}
               key={configuration.id ?? configuration.type}
             >
               {editing && (
-                <div className="mb-4 flex flex-wrap items-center gap-2 border-b border-slate-100 pb-4">
-                  <label className="mr-auto flex items-center gap-2 text-sm font-semibold">
-                    <input
-                      type="checkbox"
-                      checked={configuration.enabled}
-                      onChange={() => toggleWidget(configuration.type)}
-                    />
-                    Visible
-                  </label>
-                  <button
-                    className="btn-secondary min-h-9 px-3 py-1 text-sm"
+                <FlexRow
+                  wrap
+                  gap="sm"
+                  className="mb-4 border-b border-slate-100 pb-4"
+                >
+                  <Checkbox
+                    className="mr-auto"
+                    label="Visible"
+                    checked={configuration.enabled}
+                    onChange={() => toggleWidget(configuration.type)}
+                  />
+                  <Button
+                    variant="secondary"
+                    size="small"
                     type="button"
                     disabled={index === 0}
                     aria-label={`Move ${definition?.title ?? configuration.type} up`}
                     onClick={() => moveWidget(configuration.type, -1)}
                   >
                     ↑
-                  </button>
-                  <button
-                    className="btn-secondary min-h-9 px-3 py-1 text-sm"
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="small"
                     type="button"
                     disabled={index === widgets.length - 1}
                     aria-label={`Move ${definition?.title ?? configuration.type} down`}
                     onClick={() => moveWidget(configuration.type, 1)}
                   >
                     ↓
-                  </button>
-                </div>
+                  </Button>
+                </FlexRow>
               )}
-              <h2 className="text-xl font-bold">
+              <Heading level={2} variant="card">
                 {definition?.title ?? configuration.type}
-              </h2>
-              <p className="mb-4 mt-1 text-sm text-slate-500">
+              </Heading>
+              <Text className="mb-4 mt-1" variant="subtle">
                 {definition?.description}
-              </p>
+              </Text>
               {configuration.enabled ? (
                 <Widget settings={configuration.settings} />
               ) : (
-                <p className="text-sm text-slate-500">This widget is hidden.</p>
+                <Text variant="subtle">This widget is hidden.</Text>
               )}
-            </article>
+            </Card>
           );
         })}
-      </div>
-    </section>
+      </Grid>
+    </Page>
   );
 }

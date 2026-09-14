@@ -1,3 +1,15 @@
+import {
+  ActionLink,
+  Alert,
+  Button,
+  Card,
+  CenteredLayout,
+  Form,
+  FormField,
+  Heading,
+  Input,
+  Text,
+} from "@retzetar/ui";
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { authClient } from "../lib/auth-client.ts";
@@ -33,59 +45,44 @@ export function AuthPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-herb-50 px-4 py-12">
-      <section
-        className="card w-full max-w-md p-8"
+    <CenteredLayout>
+      <Card
+        as="section"
+        className="w-full max-w-md p-8"
         aria-labelledby="auth-title"
       >
-        <Link to="/recipes" className="font-bold text-herb-700">
+        <ActionLink as={Link} to="/recipes">
           ← Browse recipes
-        </Link>
-        <h1 id="auth-title" className="mt-6 text-3xl font-black">
+        </ActionLink>
+        <Heading id="auth-title" className="mt-6">
           {mode === "sign-in" ? "Welcome back" : "Create your account"}
-        </h1>
-        <p className="mt-2 text-slate-600">
+        </Heading>
+        <Text className="mt-2" variant="muted">
           Plan meals around what you already have.
-        </p>
-        {error && (
-          <p
-            className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-        <form
-          className="mt-6 space-y-4"
-          onSubmit={(event) => void submit(event)}
-        >
+        </Text>
+        {error && <Alert className="mt-4">{error}</Alert>}
+        <Form className="mt-6" onSubmit={(event) => void submit(event)}>
           {mode === "sign-up" && (
-            <label className="block font-semibold">
-              Name
-              <input
-                className="field mt-1"
+            <FormField label="Name">
+              <Input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 required
                 autoComplete="name"
               />
-            </label>
+            </FormField>
           )}
-          <label className="block font-semibold">
-            Email
-            <input
-              className="field mt-1"
+          <FormField label="Email">
+            <Input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
               autoComplete="email"
             />
-          </label>
-          <label className="block font-semibold">
-            Password
-            <input
-              className="field mt-1"
+          </FormField>
+          <FormField label="Password">
+            <Input
               type="password"
               minLength={8}
               value={password}
@@ -95,22 +92,20 @@ export function AuthPage() {
                 mode === "sign-in" ? "current-password" : "new-password"
               }
             />
-          </label>
-          <button
-            className="btn-primary w-full"
-            disabled={pending}
-            type="submit"
-          >
+          </FormField>
+          <Button block disabled={pending} type="submit">
             {pending
               ? "Please wait…"
               : mode === "sign-in"
                 ? "Sign in"
                 : "Sign up"}
-          </button>
-        </form>
-        <button
+          </Button>
+        </Form>
+        <Button
           type="button"
-          className="mt-5 w-full text-sm font-semibold text-herb-700"
+          variant="text"
+          block
+          className="mt-5 text-sm"
           onClick={() => {
             setError("");
             setMode(mode === "sign-in" ? "sign-up" : "sign-in");
@@ -119,8 +114,8 @@ export function AuthPage() {
           {mode === "sign-in"
             ? "Need an account? Sign up"
             : "Already registered? Sign in"}
-        </button>
-      </section>
-    </main>
+        </Button>
+      </Card>
+    </CenteredLayout>
   );
 }

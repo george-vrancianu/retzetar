@@ -1,4 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Alert,
+  Button,
+  Card,
+  FlexCol,
+  FlexRow,
+  Form,
+  FormField,
+  Grid,
+  Heading,
+  Input,
+  List,
+  Page,
+  SearchCombobox,
+  Section,
+  Text,
+} from "@retzetar/ui";
 import { useState, type FormEvent } from "react";
 import {
   EmptyState,
@@ -44,13 +61,13 @@ export function PantryPage() {
   };
 
   return (
-    <section>
-      <h1 className="text-3xl font-black sm:text-4xl">Your pantry</h1>
-      <p className="mt-2 text-slate-600">
+    <Page>
+      <Heading>Your pantry</Heading>
+      <Text className="mt-2" variant="muted">
         Track ingredients so carts only include what is missing.
-      </p>
-      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div>
+      </Text>
+      <Grid variant="sidebar" className="mt-8">
+        <Section>
           {pantry.isPending ? (
             <LoadingState label="Opening pantry" />
           ) : pantry.isError ? (
@@ -61,78 +78,67 @@ export function PantryPage() {
           ) : pantry.data.length === 0 ? (
             <EmptyState title="Your pantry is empty" />
           ) : (
-            <ul className="space-y-3">
+            <List variant="stack">
               {pantry.data.map((item) => (
-                <li
-                  className="card flex items-center justify-between gap-4"
-                  key={item.id}
-                >
-                  <div>
-                    <p className="font-bold">{item.name}</p>
-                    <p className="text-sm text-slate-500">
-                      {item.quantity} {item.unit}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-red-700"
-                    disabled={remove.isPending}
-                    onClick={() => remove.mutate(item.id)}
-                  >
-                    Remove
-                  </button>
-                </li>
+                <Card as="li" key={item.id}>
+                  <FlexRow align="between" gap="lg">
+                    <FlexCol gap="none">
+                      <Text className="font-bold">{item.name}</Text>
+                      <Text variant="subtle">
+                        {item.quantity} {item.unit}
+                      </Text>
+                    </FlexCol>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      className="text-sm"
+                      disabled={remove.isPending}
+                      onClick={() => remove.mutate(item.id)}
+                    >
+                      Remove
+                    </Button>
+                  </FlexRow>
+                </Card>
               ))}
-            </ul>
+            </List>
           )}
-        </div>
-        <form className="card" onSubmit={submit}>
-          <h2 className="text-xl font-bold">Add an ingredient</h2>
-          <label className="mt-4 block font-semibold">
-            Find ingredient
-            <input
-              className="field mt-1"
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setSelected(null);
-              }}
-              placeholder="Type at least 2 letters"
-            />
-          </label>
-          {ingredients.isFetching && (
-            <p className="mt-2 text-sm" role="status">
-              Searching…
-            </p>
-          )}
-          {ingredients.data && !selected && (
-            <ul
-              className="mt-2 max-h-40 overflow-auto rounded-lg border border-slate-200"
-              aria-label="Ingredient results"
-            >
-              {ingredients.data.map((ingredient) => (
-                <li key={ingredient.id}>
-                  <button
-                    className="w-full px-3 py-2 text-left hover:bg-herb-50"
-                    type="button"
-                    onClick={() => {
-                      setSelected(ingredient);
-                      setSearch(ingredient.name);
-                      setUnit(ingredient.defaultUnit);
-                    }}
-                  >
-                    {ingredient.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <label className="font-semibold">
-              Quantity
-              <input
-                className="field mt-1"
+        </Section>
+        <Card as={Form} onSubmit={submit}>
+          <Heading level={2} variant="card">
+            Add an ingredient
+          </Heading>
+          <SearchCombobox
+            className="mt-4"
+            label="Find ingredient"
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setSelected(null);
+            }}
+            options={
+              selected
+                ? []
+                : (ingredients.data ?? []).map((ingredient) => ({
+                    id: ingredient.id,
+                    label: ingredient.name,
+                  }))
+            }
+            onSelect={(option) => {
+              const ingredient = ingredients.data?.find(
+                (item) => item.id === option.id,
+              );
+              if (!ingredient) return;
+              setSelected(ingredient);
+              setSearch(ingredient.name);
+              setUnit(ingredient.defaultUnit);
+            }}
+            placeholder="Type at least 2 letters"
+            loading={ingredients.isFetching}
+            resultsLabel="Ingredient results"
+          />
+          <Grid variant="fields" className="mt-4">
+            <FormField label="Quantity">
+              <Input
                 type="number"
                 min="0.01"
                 step="any"
@@ -140,32 +146,31 @@ export function PantryPage() {
                 onChange={(event) => setQuantity(event.target.value)}
                 required
               />
-            </label>
-            <label className="font-semibold">
-              Unit
-              <input
-                className="field mt-1"
+            </FormField>
+            <FormField label="Unit">
+              <Input
                 value={unit}
                 onChange={(event) => setUnit(event.target.value)}
                 required
               />
-            </label>
-          </div>
-          <button
-            className="btn-primary mt-4 w-full"
+            </FormField>
+          </Grid>
+          <Button
+            className="mt-4"
+            block
             type="submit"
             disabled={!selected || add.isPending}
           >
             {add.isPending ? "Adding…" : "Add to pantry"}
-          </button>
+          </Button>
           {(add.isError || remove.isError) && (
-            <p className="mt-3 text-sm text-red-700" role="alert">
+            <Alert className="mt-3">
               The pantry could not be updated. Check for a duplicate and try
               again.
-            </p>
+            </Alert>
           )}
-        </form>
-      </div>
-    </section>
+        </Card>
+      </Grid>
+    </Page>
   );
 }

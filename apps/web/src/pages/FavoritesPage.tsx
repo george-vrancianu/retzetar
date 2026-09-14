@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Alert, Grid, Heading, Page, Section, Text } from "@retzetar/ui";
 import {
   EmptyState,
   ErrorState,
@@ -16,12 +17,12 @@ export function FavoritesPage() {
   });
 
   return (
-    <section>
-      <h1 className="text-3xl font-black sm:text-4xl">Favorite recipes</h1>
-      <p className="mt-2 text-slate-600">
+    <Page>
+      <Heading>Favorite recipes</Heading>
+      <Text className="mt-2" variant="muted">
         Your saved ideas, ready when you are.
-      </p>
-      <div className="mt-8">
+      </Text>
+      <Section spacing="lg">
         {query.isPending ? (
           <LoadingState label="Loading favorites" />
         ) : query.isError ? (
@@ -32,7 +33,7 @@ export function FavoritesPage() {
         ) : query.data.length === 0 ? (
           <EmptyState title="You have not saved any recipes yet" />
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <Grid>
             {query.data.map(({ recipe }) => (
               <RecipeCard
                 key={recipe.id}
@@ -44,14 +45,12 @@ export function FavoritesPage() {
                 }}
               />
             ))}
-          </div>
+          </Grid>
         )}
         {remove.isError && (
-          <p className="mt-4 text-red-700" role="alert">
-            Could not remove that favorite.
-          </p>
+          <Alert className="mt-4">Could not remove that favorite.</Alert>
         )}
-      </div>
-    </section>
+      </Section>
+    </Page>
   );
 }

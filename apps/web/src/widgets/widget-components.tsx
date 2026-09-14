@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { ActionLink, List, ListItem, Text } from "@retzetar/ui";
 import { Link } from "react-router-dom";
 import {
   EmptyState,
@@ -23,10 +24,12 @@ export function PantrySummary() {
     );
   }
   return (
-    <p className="text-3xl font-black text-herb-700">
+    <Text variant="metric">
       {query.data.length}{" "}
-      <span className="text-base font-medium text-slate-600">items ready</span>
-    </p>
+      <Text as="span" className="text-base font-medium text-slate-600">
+        items ready
+      </Text>
+    </Text>
   );
 }
 
@@ -49,18 +52,15 @@ export function RecommendedRecipes({ settings }: WidgetProps) {
   if (recipes.length === 0)
     return <EmptyState title="No recipes published yet" />;
   return (
-    <ul className="space-y-2">
+    <List variant="compact">
       {recipes.map((recipe) => (
-        <li key={recipe.id}>
-          <Link
-            className="font-semibold text-herb-700 hover:underline"
-            to={`/recipes/${recipe.id}`}
-          >
+        <ListItem key={recipe.id}>
+          <ActionLink as={Link} to={`/recipes/${recipe.id}`}>
             {recipe.title}
-          </Link>
-        </li>
+          </ActionLink>
+        </ListItem>
       ))}
-    </ul>
+    </List>
   );
 }
 
@@ -79,16 +79,18 @@ export function FavoriteSummary() {
     <EmptyState
       title="No favorites yet"
       action={
-        <Link className="text-herb-700 underline" to="/recipes">
+        <ActionLink as={Link} to="/recipes">
           Find a recipe
-        </Link>
+        </ActionLink>
       }
     />
   ) : (
-    <p>
-      <strong className="text-3xl text-herb-700">{query.data.length}</strong>{" "}
+    <Text>
+      <Text as="strong" className="text-3xl text-herb-700">
+        {query.data.length}
+      </Text>{" "}
       saved recipes
-    </p>
+    </Text>
   );
 }
 
@@ -105,19 +107,16 @@ export function ActiveCart() {
   }
   const cart = query.data.find((item) => item.status === "active");
   return cart ? (
-    <Link
-      className="font-semibold text-herb-700 underline"
-      to={`/carts/${cart.id}`}
-    >
+    <ActionLink as={Link} to={`/carts/${cart.id}`}>
       Continue “{cart.name}”
-    </Link>
+    </ActionLink>
   ) : (
     <EmptyState
       title="No active cart"
       action={
-        <Link className="text-herb-700 underline" to="/carts">
+        <ActionLink as={Link} to="/carts">
           Create one
-        </Link>
+        </ActionLink>
       }
     />
   );
