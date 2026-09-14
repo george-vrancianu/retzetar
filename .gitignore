@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+apps/*/.env
+apps/*/.env.*
+*.log
+.DS_Store
+.vscode/
+.idea/
+apps/api/drizzle/meta/
