@@ -11,7 +11,11 @@ const recipe = {
   servings: 4,
   prepMinutes: 10,
   cookMinutes: 20,
-  tags: ["vegetarian"],
+  tags: [],
+  dietTypes: [
+    { id: "diet-vegetarian", name: "Vegetarian" },
+    { id: "diet-vegan", name: "Vegan" },
+  ],
 };
 
 describe("RecipeCard", () => {
@@ -29,5 +33,6 @@ describe("RecipeCard", () => {
       "/recipes/recipe-1",
     );
     expect(screen.getByText("30 min · 4 servings")).toBeInTheDocument();
+    expect(screen.getByText("Vegetarian · Vegan")).toBeInTheDocument();
   });
 });

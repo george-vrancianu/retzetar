@@ -1,6 +1,13 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { ingredients, recipeIngredients, recipes, recipeSteps } from './schema';
+import {
+  dietTypes,
+  ingredients,
+  recipeDietTypes,
+  recipeIngredients,
+  recipes,
+  recipeSteps,
+} from './schema';
 
 const ingredientRows = [
   {
@@ -54,6 +61,29 @@ const ingredientRows = [
   },
 ] as const;
 
+const dietTypeRows = [
+  {
+    id: '30000000-0000-4000-8000-000000000001',
+    name: 'Vegetarian',
+    normalizedName: 'vegetarian',
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000002',
+    name: 'Vegan',
+    normalizedName: 'vegan',
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000003',
+    name: 'Omnivore',
+    normalizedName: 'omnivore',
+  },
+  {
+    id: '30000000-0000-4000-8000-000000000004',
+    name: 'Pescatarian',
+    normalizedName: 'pescatarian',
+  },
+] as const;
+
 const recipeRows: Array<typeof recipes.$inferInsert & { id: string }> = [
   {
     id: '20000000-0000-4000-8000-000000000001',
@@ -64,7 +94,7 @@ const recipeRows: Array<typeof recipes.$inferInsert & { id: string }> = [
     servings: 2,
     prepMinutes: 10,
     cookMinutes: 20,
-    tags: ['vegetarian', 'quick', 'pasta'],
+    tags: ['quick', 'pasta'],
     published: true,
   },
   {
@@ -76,10 +106,25 @@ const recipeRows: Array<typeof recipes.$inferInsert & { id: string }> = [
     servings: 1,
     prepMinutes: 5,
     cookMinutes: 8,
-    tags: ['vegetarian', 'breakfast', 'quick'],
+    tags: ['breakfast', 'quick'],
     published: true,
   },
 ];
+
+const recipeDietTypeRows = [
+  {
+    recipeId: recipeRows[0].id,
+    dietTypeId: dietTypeRows[0].id,
+  },
+  {
+    recipeId: recipeRows[0].id,
+    dietTypeId: dietTypeRows[1].id,
+  },
+  {
+    recipeId: recipeRows[1].id,
+    dietTypeId: dietTypeRows[0].id,
+  },
+] as const;
 
 const recipeIngredientRows = [
   {
@@ -195,12 +240,20 @@ async function seed() {
   try {
     await database.transaction(async (transaction) => {
       await transaction
+        .insert(dietTypes)
+        .values([...dietTypeRows])
+        .onConflictDoNothing();
+      await transaction
         .insert(ingredients)
         .values([...ingredientRows])
         .onConflictDoNothing();
       await transaction
         .insert(recipes)
         .values([...recipeRows])
+        .onConflictDoNothing();
+      await transaction
+        .insert(recipeDietTypes)
+        .values([...recipeDietTypeRows])
         .onConflictDoNothing();
       await transaction
         .insert(recipeIngredients)
@@ -212,7 +265,7 @@ async function seed() {
         .onConflictDoNothing();
     });
     console.log(
-      `Seeded ${recipeRows.length} recipes and ${ingredientRows.length} ingredients.`,
+      `Seeded ${recipeRows.length} recipes, ${ingredientRows.length} ingredients, and ${dietTypeRows.length} diet types.`,
     );
   } finally {
     await pool.end();

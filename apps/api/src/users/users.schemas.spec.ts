@@ -5,15 +5,31 @@ describe('updateProfileSchema', () => {
     expect(
       updateProfileSchema.parse({
         displayName: 'George',
-        dietary: { diets: ['vegetarian'], allergens: [] },
+        dietary: {
+          preferredDietTypeIds: ['30000000-0000-4000-8000-000000000001'],
+          allergicIngredientIds: [],
+        },
       }),
     ).toEqual({
       displayName: 'George',
-      dietary: { diets: ['vegetarian'], allergens: [] },
+      dietary: {
+        preferredDietTypeIds: ['30000000-0000-4000-8000-000000000001'],
+        allergicIngredientIds: [],
+      },
     });
   });
 
-  it('rejects an empty update', () => {
+  it('rejects duplicate selections and empty updates', () => {
+    expect(
+      updateProfileSchema.safeParse({
+        dietary: {
+          preferredDietTypeIds: [
+            '30000000-0000-4000-8000-000000000001',
+            '30000000-0000-4000-8000-000000000001',
+          ],
+        },
+      }).success,
+    ).toBe(false);
     expect(updateProfileSchema.safeParse({}).success).toBe(false);
   });
 });

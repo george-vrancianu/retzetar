@@ -1,20 +1,52 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import { DATABASE } from '../database/database.constants';
 import type { Database } from '../database/database.types';
-import { favoriteRecipes, recipes } from '../database/schema';
+import {
+  dietTypes,
+  favoriteRecipes,
+  recipeDietTypes,
+  recipes,
+} from '../database/schema';
 
 @Injectable()
 export class FavoritesService {
   constructor(@Inject(DATABASE) private readonly database: Database) {}
 
-  list(userId: string) {
-    return this.database
+  async list(userId: string) {
+    const favorites = await this.database
       .select({ recipe: recipes, favoritedAt: favoriteRecipes.createdAt })
       .from(favoriteRecipes)
       .innerJoin(recipes, eq(favoriteRecipes.recipeId, recipes.id))
       .where(eq(favoriteRecipes.userId, userId))
       .orderBy(desc(favoriteRecipes.createdAt));
+    const recipeIds = favorites.map(({ recipe }) => recipe.id);
+    const dietTypeRows = recipeIds.length
+      ? await this.database
+          .select({
+            recipeId: recipeDietTypes.recipeId,
+            id: dietTypes.id,
+            name: dietTypes.name,
+          })
+          .from(recipeDietTypes)
+          .innerJoin(dietTypes, eq(recipeDietTypes.dietTypeId, dietTypes.id))
+          .where(inArray(recipeDietTypes.recipeId, recipeIds))
+          .orderBy(dietTypes.name)
+      : [];
+    const dietTypesByRecipe = dietTypeRows.reduce((grouped, row) => {
+      const values = grouped.get(row.recipeId) ?? [];
+      values.push({ id: row.id, name: row.name });
+      grouped.set(row.recipeId, values);
+      return grouped;
+    }, new Map<string, Array<{ id: string; name: string }>>());
+
+    return favorites.map((favorite) => ({
+      ...favorite,
+      recipe: {
+        ...favorite.recipe,
+        dietTypes: dietTypesByRecipe.get(favorite.recipe.id) ?? [],
+      },
+    }));
   }
 
   async add(userId: string, recipeId: string) {

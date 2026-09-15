@@ -8,12 +8,18 @@ const ingredientQuerySchema = z.object({
   q: z.string().trim().max(100).default(''),
 });
 
-@ApiTags('ingredients')
-@Controller('ingredients')
+@ApiTags('reference data')
+@Controller()
 export class IngredientsController {
   constructor(private readonly recipes: RecipesService) {}
 
-  @Get()
+  @Get('diet-types')
+  @ApiOperation({ summary: 'List canonical diet types' })
+  listDietTypes() {
+    return this.recipes.listDietTypes();
+  }
+
+  @Get('ingredients')
   @ApiOperation({ summary: 'Find canonical ingredients for pantry management' })
   list(
     @Query(new ZodValidationPipe(ingredientQuerySchema)) query: { q: string },

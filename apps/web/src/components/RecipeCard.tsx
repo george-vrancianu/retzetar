@@ -33,6 +33,11 @@ export function RecipeCard({
           {recipe.prepMinutes + recipe.cookMinutes} min · {recipe.servings}{" "}
           servings
         </Text>
+        {recipe.dietTypes.length > 0 && (
+          <Text variant="small" className="font-medium text-herb-700">
+            {recipe.dietTypes.map((dietType) => dietType.name).join(" · ")}
+          </Text>
+        )}
         {favoriteAction && (
           <Button
             type="button"

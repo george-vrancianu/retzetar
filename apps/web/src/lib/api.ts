@@ -29,6 +29,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export type ReferenceItem = { id: string; name: string };
+
 export type Recipe = {
   id: string;
   title: string;
@@ -38,6 +40,7 @@ export type Recipe = {
   prepMinutes: number;
   cookMinutes: number;
   tags: string[];
+  dietTypes: ReferenceItem[];
 };
 
 export type RecipeDetail = Recipe & {
@@ -92,9 +95,9 @@ export type UserProfile = {
   avatarUrl: string | null;
   locale: string;
   dietary: {
-    diets: string[];
-    allergens: string[];
-    dislikedIngredients: string[];
+    preferredDietTypes: ReferenceItem[];
+    allergicIngredients: ReferenceItem[];
+    dislikedIngredients: ReferenceItem[];
   };
 };
 
@@ -117,12 +120,17 @@ export const api = {
     displayName?: string | null;
     bio?: string | null;
     locale?: string;
-    dietary?: Partial<UserProfile["dietary"]>;
+    dietary?: {
+      preferredDietTypeIds?: string[];
+      allergicIngredientIds?: string[];
+      dislikedIngredientIds?: string[];
+    };
   }) =>
     request<UserProfile>("/users/me", {
       method: "PATCH",
       body: JSON.stringify(input),
     }),
+  dietTypes: () => request<ReferenceItem[]>("/diet-types"),
   recipes: (q = "", page = 1, limit = 12) =>
     request<{
       items: Recipe[];

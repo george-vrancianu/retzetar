@@ -8,30 +8,39 @@ import {
   Heading,
   Input,
   Page,
+  Option,
+  Select,
   Status,
   Text,
   Textarea,
 } from "@retzetar/ui";
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { ErrorState, LoadingState } from "../components/QueryState.tsx";
 import { api, type UserProfile } from "../lib/api.ts";
 
-const splitList = (value: string) =>
-  value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+const selectedValues = (event: ChangeEvent<HTMLSelectElement>) =>
+  Array.from(event.currentTarget.selectedOptions, (option) => option.value);
 
 function ProfileForm({ profile }: { profile: UserProfile }) {
   const queryClient = useQueryClient();
+  const dietTypes = useQuery({
+    queryKey: ["diet-types"],
+    queryFn: api.dietTypes,
+  });
+  const ingredients = useQuery({
+    queryKey: ["ingredients", ""],
+    queryFn: () => api.ingredients(""),
+  });
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [bio, setBio] = useState(profile.bio ?? "");
-  const [diets, setDiets] = useState(profile.dietary.diets.join(", "));
-  const [allergens, setAllergens] = useState(
-    profile.dietary.allergens.join(", "),
+  const [preferredDietTypeIds, setPreferredDietTypeIds] = useState(
+    profile.dietary.preferredDietTypes.map((dietType) => dietType.id),
   );
-  const [disliked, setDisliked] = useState(
-    profile.dietary.dislikedIngredients.join(", "),
+  const [allergicIngredientIds, setAllergicIngredientIds] = useState(
+    profile.dietary.allergicIngredients.map((ingredient) => ingredient.id),
+  );
+  const [dislikedIngredientIds, setDislikedIngredientIds] = useState(
+    profile.dietary.dislikedIngredients.map((ingredient) => ingredient.id),
   );
   const update = useMutation({
     mutationFn: () =>
@@ -39,9 +48,9 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
         displayName,
         bio: bio || null,
         dietary: {
-          diets: splitList(diets),
-          allergens: splitList(allergens),
-          dislikedIngredients: splitList(disliked),
+          preferredDietTypeIds,
+          allergicIngredientIds,
+          dislikedIngredientIds,
         },
       }),
     onSuccess: (data) => queryClient.setQueryData(["profile"], data),
@@ -75,26 +84,59 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
           onChange={(event) => setBio(event.target.value)}
         />
       </FormField>
-      <FormField label="Diets">
-        <Input
-          value={diets}
-          placeholder="Vegetarian, gluten-free"
-          onChange={(event) => setDiets(event.target.value)}
-        />
+      <FormField
+        label="Preferred diet types"
+        hint="Use Ctrl or Cmd to select more than one."
+      >
+        <Select
+          multiple
+          className="min-h-32"
+          value={preferredDietTypeIds}
+          disabled={dietTypes.isPending || dietTypes.isError}
+          onChange={(event) => setPreferredDietTypeIds(selectedValues(event))}
+        >
+          {dietTypes.data?.map((dietType) => (
+            <Option key={dietType.id} value={dietType.id}>
+              {dietType.name}
+            </Option>
+          ))}
+        </Select>
       </FormField>
-      <FormField label="Allergens">
-        <Input
-          value={allergens}
-          placeholder="Peanuts, shellfish"
-          onChange={(event) => setAllergens(event.target.value)}
-        />
+      <FormField
+        label="Allergic ingredients"
+        hint="Use Ctrl or Cmd to select more than one."
+      >
+        <Select
+          multiple
+          className="min-h-32"
+          value={allergicIngredientIds}
+          disabled={ingredients.isPending || ingredients.isError}
+          onChange={(event) => setAllergicIngredientIds(selectedValues(event))}
+        >
+          {ingredients.data?.map((ingredient) => (
+            <Option key={ingredient.id} value={ingredient.id}>
+              {ingredient.name}
+            </Option>
+          ))}
+        </Select>
       </FormField>
-      <FormField label="Disliked ingredients">
-        <Input
-          value={disliked}
-          placeholder="Cilantro, olives"
-          onChange={(event) => setDisliked(event.target.value)}
-        />
+      <FormField
+        label="Disliked ingredients"
+        hint="Use Ctrl or Cmd to select more than one."
+      >
+        <Select
+          multiple
+          className="min-h-32"
+          value={dislikedIngredientIds}
+          disabled={ingredients.isPending || ingredients.isError}
+          onChange={(event) => setDislikedIngredientIds(selectedValues(event))}
+        >
+          {ingredients.data?.map((ingredient) => (
+            <Option key={ingredient.id} value={ingredient.id}>
+              {ingredient.name}
+            </Option>
+          ))}
+        </Select>
       </FormField>
       <Button type="submit" disabled={update.isPending}>
         {update.isPending ? "Saving…" : "Save profile"}

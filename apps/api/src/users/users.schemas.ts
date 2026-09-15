@@ -1,9 +1,18 @@
 import { z } from 'zod';
 
+const uniqueUuidList = (maximum: number) =>
+  z
+    .array(z.uuid())
+    .max(maximum)
+    .refine(
+      (ids) => new Set(ids).size === ids.length,
+      'Selections must not contain duplicates',
+    );
+
 const dietarySchema = z.object({
-  diets: z.array(z.string().trim().min(1).max(50)).max(20),
-  allergens: z.array(z.string().trim().min(1).max(50)).max(50),
-  dislikedIngredients: z.array(z.string().trim().min(1).max(100)).max(100),
+  preferredDietTypeIds: uniqueUuidList(20),
+  allergicIngredientIds: uniqueUuidList(50),
+  dislikedIngredientIds: uniqueUuidList(100),
 });
 
 export const updateProfileSchema = z

@@ -112,24 +112,26 @@ export const userProfiles = pgTable(
   (table) => [uniqueIndex('user_profiles_user_id_idx').on(table.userId)],
 );
 
-export type DietaryPreferences = {
-  diets: string[];
-  allergens: string[];
-  dislikedIngredients: string[];
-};
-
 export const userPreferences = pgTable('user_preferences', {
   userId: text('user_id')
     .primaryKey()
     .references(() => user.id, { onDelete: 'cascade' }),
   locale: text('locale').notNull().default('en'),
-  dietary: jsonb('dietary').$type<DietaryPreferences>().notNull().default({
-    diets: [],
-    allergens: [],
-    dislikedIngredients: [],
-  }),
   ...timestamps,
 });
+
+export const dietTypes = pgTable(
+  'diet_types',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    normalizedName: text('normalized_name').notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex('diet_types_normalized_name_idx').on(table.normalizedName),
+  ],
+);
 
 export const ingredients = pgTable(
   'ingredients',
@@ -164,6 +166,22 @@ export const recipes = pgTable(
   (table) => [
     uniqueIndex('recipes_slug_idx').on(table.slug),
     index('recipes_title_idx').on(table.title),
+  ],
+);
+
+export const recipeDietTypes = pgTable(
+  'recipe_diet_types',
+  {
+    recipeId: uuid('recipe_id')
+      .notNull()
+      .references(() => recipes.id, { onDelete: 'cascade' }),
+    dietTypeId: uuid('diet_type_id')
+      .notNull()
+      .references(() => dietTypes.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.recipeId, table.dietTypeId] }),
+    index('recipe_diet_types_diet_type_idx').on(table.dietTypeId),
   ],
 );
 
@@ -205,6 +223,45 @@ export const recipeSteps = pgTable(
   (table) => [
     uniqueIndex('recipe_steps_position_idx').on(table.recipeId, table.position),
   ],
+);
+
+export const userPreferredDietTypes = pgTable(
+  'user_preferred_diet_types',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    dietTypeId: uuid('diet_type_id')
+      .notNull()
+      .references(() => dietTypes.id, { onDelete: 'cascade' }),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.dietTypeId] })],
+);
+
+export const userAllergicIngredients = pgTable(
+  'user_allergic_ingredients',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    ingredientId: uuid('ingredient_id')
+      .notNull()
+      .references(() => ingredients.id, { onDelete: 'cascade' }),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.ingredientId] })],
+);
+
+export const userDislikedIngredients = pgTable(
+  'user_disliked_ingredients',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    ingredientId: uuid('ingredient_id')
+      .notNull()
+      .references(() => ingredients.id, { onDelete: 'cascade' }),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.ingredientId] })],
 );
 
 export const pantryIngredients = pgTable(

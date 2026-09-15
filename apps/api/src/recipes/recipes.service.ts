@@ -1,9 +1,11 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, or } from 'drizzle-orm';
 import { DATABASE } from '../database/database.constants';
 import type { Database } from '../database/database.types';
 import {
+  dietTypes,
   ingredients,
+  recipeDietTypes,
   recipeIngredients,
   recipes,
   recipeSteps,
@@ -36,8 +38,14 @@ export class RecipesService {
     ]);
 
     const total = totalRows[0]?.total ?? 0;
+    const dietTypesByRecipe = await this.getDietTypesByRecipeId(
+      items.map((recipe) => recipe.id),
+    );
     return {
-      items,
+      items: items.map((recipe) => ({
+        ...recipe,
+        dietTypes: dietTypesByRecipe.get(recipe.id) ?? [],
+      })),
       pagination: {
         page: query.page,
         limit: query.limit,
@@ -45,6 +53,13 @@ export class RecipesService {
         pages: Math.ceil(total / query.limit),
       },
     };
+  }
+
+  listDietTypes() {
+    return this.database
+      .select({ id: dietTypes.id, name: dietTypes.name })
+      .from(dietTypes)
+      .orderBy(dietTypes.name);
   }
 
   listIngredients(query: string) {
@@ -70,7 +85,7 @@ export class RecipesService {
     const recipe = rows[0];
     if (!recipe) throw new NotFoundException('Recipe not found');
 
-    const [ingredientRows, steps] = await Promise.all([
+    const [ingredientRows, steps, dietTypesByRecipe] = await Promise.all([
       this.database
         .select({
           id: recipeIngredients.id,
@@ -93,8 +108,37 @@ export class RecipesService {
         .from(recipeSteps)
         .where(eq(recipeSteps.recipeId, id))
         .orderBy(recipeSteps.position),
+      this.getDietTypesByRecipeId([id]),
     ]);
 
-    return { ...recipe, ingredients: ingredientRows, steps };
+    return {
+      ...recipe,
+      dietTypes: dietTypesByRecipe.get(id) ?? [],
+      ingredients: ingredientRows,
+      steps,
+    };
+  }
+
+  private async getDietTypesByRecipeId(recipeIds: string[]) {
+    if (recipeIds.length === 0)
+      return new Map<string, Array<{ id: string; name: string }>>();
+
+    const rows = await this.database
+      .select({
+        recipeId: recipeDietTypes.recipeId,
+        id: dietTypes.id,
+        name: dietTypes.name,
+      })
+      .from(recipeDietTypes)
+      .innerJoin(dietTypes, eq(recipeDietTypes.dietTypeId, dietTypes.id))
+      .where(inArray(recipeDietTypes.recipeId, recipeIds))
+      .orderBy(dietTypes.name);
+
+    return rows.reduce((grouped, row) => {
+      const values = grouped.get(row.recipeId) ?? [];
+      values.push({ id: row.id, name: row.name });
+      grouped.set(row.recipeId, values);
+      return grouped;
+    }, new Map<string, Array<{ id: string; name: string }>>());
   }
 }
