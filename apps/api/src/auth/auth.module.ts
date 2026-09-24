@@ -7,6 +7,7 @@ import { DATABASE } from '../database/database.constants';
 import type { Database } from '../database/database.types';
 import * as schema from '../database/schema';
 import { AUTH } from './auth.constants';
+import { AdminRoleGuard } from './admin-role.guard';
 import { AuthGuard } from './auth.guard';
 
 @Global()
@@ -30,11 +31,17 @@ import { AuthGuard } from './auth.guard';
           }),
           emailAndPassword: { enabled: true },
           rateLimit: { enabled: true, window: 60, max: 100 },
-          trustedOrigins: [config.get('CLIENT_ORIGIN', { infer: true })],
+          trustedOrigins: [
+            config.get('CLIENT_ORIGIN', { infer: true }),
+            'http://localhost:5174',
+            'http://127.0.0.1:5174',
+            'http://192.168.1.*:5174',
+          ],
         }),
     },
     AuthGuard,
+    AdminRoleGuard,
   ],
-  exports: [AUTH, AuthGuard],
+  exports: [AUTH, AuthGuard, AdminRoleGuard],
 })
 export class AuthModule {}

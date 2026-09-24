@@ -38,6 +38,7 @@ export class UsersService {
           name: user.name,
           email: user.email,
           image: user.image,
+          role: user.role,
           displayName: userProfiles.displayName,
           bio: userProfiles.bio,
           avatarUrl: userProfiles.avatarUrl,

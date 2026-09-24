@@ -8,8 +8,10 @@ import {
   FlexRow,
   Navigation,
 } from "@retzetar/ui";
+import { useQuery } from "@tanstack/react-query";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { authClient } from "../lib/auth-client.ts";
+import { api } from "../lib/api.ts";
 
 const navigation = [
   ["Dashboard", "/dashboard"],
@@ -23,7 +25,12 @@ const navigation = [
 export function AppLayout() {
   const session = authClient.useSession();
   const navigate = useNavigate();
+  const profile = useQuery({
+    queryKey: ["profile"],
+    queryFn: api.profile,
+    enabled: Boolean(session.data),
 
+  });
   const signOut = async () => {
     await authClient.signOut();
     navigate("/auth");
@@ -47,6 +54,11 @@ export function AppLayout() {
                   {label}
                 </ActionLink>
               ))}
+            {profile.data?.role === "admin" && (
+              <ActionLink as={NavLink} to="/admin" variant="nav">
+                Admin
+              </ActionLink>
+            )}
           </Navigation>
           <FlexRow className="order-2 sm:order-3">
             {session.data ? (

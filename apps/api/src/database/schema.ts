@@ -23,6 +23,8 @@ const timestamps = {
     .$onUpdateFn(() => new Date()),
 };
 
+export const userRole = pgEnum('user_role', ['admin', 'regular']);
+
 // Better Auth core tables. User IDs intentionally remain text because Better Auth owns them.
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -30,6 +32,7 @@ export const user = pgTable('user', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
+  role: userRole('role').notNull().default('regular'),
   ...timestamps,
 });
 
@@ -133,6 +136,21 @@ export const dietTypes = pgTable(
   ],
 );
 
+export const ingredientCategories = pgTable(
+  'ingredient_categories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    normalizedName: text('normalized_name').notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex('ingredient_categories_normalized_name_idx').on(
+      table.normalizedName,
+    ),
+  ],
+);
+
 export const ingredients = pgTable(
   'ingredients',
   {
@@ -140,11 +158,14 @@ export const ingredients = pgTable(
     name: text('name').notNull(),
     normalizedName: text('normalized_name').notNull(),
     defaultUnit: text('default_unit').notNull(),
-    category: text('category'),
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => ingredientCategories.id),
     ...timestamps,
   },
   (table) => [
     uniqueIndex('ingredients_normalized_name_idx').on(table.normalizedName),
+    index('ingredients_category_idx').on(table.categoryId),
   ],
 );
 

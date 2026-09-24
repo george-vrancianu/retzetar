@@ -21,13 +21,27 @@ import {
   type PantryUpdateInput,
 } from './pantry.schemas';
 import { PantryService } from './pantry.service';
+import {
+  productScanSchema,
+  type ProductScanInput,
+} from './product-scan.schemas';
+import { ProductScanService } from './product-scan.service';
+import {
+  receiptScanSchema,
+  type ReceiptScanInput,
+} from './receipt-scan.schemas';
+import { ReceiptScanService } from './receipt-scan.service';
 
 @ApiTags('pantry')
 @ApiCookieAuth()
 @UseGuards(AuthGuard)
 @Controller('pantry')
 export class PantryController {
-  constructor(private readonly pantry: PantryService) {}
+  constructor(
+    private readonly pantry: PantryService,
+    private readonly productScan: ProductScanService,
+    private readonly receiptScan: ReceiptScanService,
+  ) {}
 
   @Get()
   list(@CurrentUser() user: User) {
@@ -40,6 +54,20 @@ export class PantryController {
     @Body(new ZodValidationPipe(pantryItemSchema)) input: PantryItemInput,
   ) {
     return this.pantry.create(user.id, input);
+  }
+
+  @Post('scan-product')
+  scanProduct(
+    @Body(new ZodValidationPipe(productScanSchema)) input: ProductScanInput,
+  ) {
+    return this.productScan.analyze(input);
+  }
+
+  @Post('scan-receipt')
+  scanReceipt(
+    @Body(new ZodValidationPipe(receiptScanSchema)) input: ReceiptScanInput,
+  ) {
+    return this.receiptScan.analyze(input);
   }
 
   @Patch(':id')

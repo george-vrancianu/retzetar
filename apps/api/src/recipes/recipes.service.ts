@@ -4,6 +4,7 @@ import { DATABASE } from '../database/database.constants';
 import type { Database } from '../database/database.types';
 import {
   dietTypes,
+  ingredientCategories,
   ingredients,
   recipeDietTypes,
   recipeIngredients,
@@ -68,9 +69,13 @@ export class RecipesService {
         id: ingredients.id,
         name: ingredients.name,
         defaultUnit: ingredients.defaultUnit,
-        category: ingredients.category,
+        category: ingredientCategories.name,
       })
       .from(ingredients)
+      .innerJoin(
+        ingredientCategories,
+        eq(ingredients.categoryId, ingredientCategories.id),
+      )
       .where(query ? ilike(ingredients.name, `%${query}%`) : undefined)
       .orderBy(ingredients.name)
       .limit(30);

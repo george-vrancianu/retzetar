@@ -1,70 +1,61 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Alert,
   Button,
   Card,
   FlexCol,
   FlexRow,
-  Form,
-  FormField,
   Grid,
   Heading,
-  Input,
   List,
   Page,
-  SearchCombobox,
   Section,
   Text,
 } from "@retzetar/ui";
-import { useState, type FormEvent } from "react";
+import { AddPantryIngredientCard } from "../components/pantry/AddPantryIngredientCard.tsx";
+import { PantryScanPanel } from "../components/pantry/PantryScanPanel.tsx";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
 } from "../components/QueryState.tsx";
 import { api } from "../lib/api.ts";
+import { useScannedIngredientsStore } from "../stores/scanned-ingredients-store.ts";
+
+function expiryLabel(expiresAt: string) {
+  const date = new Date(expiresAt);
+  const formatted = new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.ceil((date.getTime() - today.getTime()) / 86_400_000);
+  if (days < 0) return `Expired · ${formatted}`;
+  if (days <= 3) return `Expires soon · ${formatted}`;
+  return `Expires ${formatted}`;
+}
 
 export function PantryPage() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<{
-    id: string;
-    name: string;
-    defaultUnit: string;
-  } | null>(null);
-  const [quantity, setQuantity] = useState("1");
-  const [unit, setUnit] = useState("");
+  const scannedIngredients = useScannedIngredientsStore(
+    (state) => state.ingredients,
+  );
+  const removeScannedIngredient = useScannedIngredientsStore(
+    (state) => state.removeIngredient,
+  );
   const pantry = useQuery({ queryKey: ["pantry"], queryFn: api.pantry });
-  const ingredients = useQuery({
-    queryKey: ["ingredients", search],
-    queryFn: () => api.ingredients(search),
-    enabled: search.trim().length >= 2,
-  });
-  const add = useMutation({
-    mutationFn: api.addPantry,
-    onSuccess: async () => {
-      setSelected(null);
-      setSearch("");
-      setQuantity("1");
-      await queryClient.invalidateQueries({ queryKey: ["pantry"] });
-    },
-  });
   const remove = useMutation({
     mutationFn: api.removePantry,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pantry"] }),
   });
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (!selected) return;
-    add.mutate({ ingredientId: selected.id, quantity: Number(quantity), unit });
-  };
-
   return (
     <Page>
       <Heading>Your pantry</Heading>
       <Text className="mt-2" variant="muted">
-        Track ingredients so carts only include what is missing.
+        Track ingredients and their expiry dates so carts only include what is
+        missing.
       </Text>
       <Grid variant="sidebar" className="mt-8">
         <Section>
@@ -87,6 +78,11 @@ export function PantryPage() {
                       <Text variant="subtle">
                         {item.quantity} {item.unit}
                       </Text>
+                      {item.expiresAt && (
+                        <Text className="mt-1" variant="subtle">
+                          {expiryLabel(item.expiresAt)}
+                        </Text>
+                      )}
                     </FlexCol>
                     <Button
                       type="button"
@@ -103,73 +99,44 @@ export function PantryPage() {
             </List>
           )}
         </Section>
-        <Card as={Form} onSubmit={submit}>
-          <Heading level={2} variant="card">
-            Add an ingredient
-          </Heading>
-          <SearchCombobox
-            className="mt-4"
-            label="Find ingredient"
-            value={search}
-            onChange={(value) => {
-              setSearch(value);
-              setSelected(null);
-            }}
-            options={
-              selected
-                ? []
-                : (ingredients.data ?? []).map((ingredient) => ({
-                    id: ingredient.id,
-                    label: ingredient.name,
-                  }))
-            }
-            onSelect={(option) => {
-              const ingredient = ingredients.data?.find(
-                (item) => item.id === option.id,
-              );
-              if (!ingredient) return;
-              setSelected(ingredient);
-              setSearch(ingredient.name);
-              setUnit(ingredient.defaultUnit);
-            }}
-            placeholder="Type at least 2 letters"
-            loading={ingredients.isFetching}
-            resultsLabel="Ingredient results"
-          />
-          <Grid variant="fields" className="mt-4">
-            <FormField label="Quantity">
-              <Input
-                type="number"
-                min="0.01"
-                step="any"
-                value={quantity}
-                onChange={(event) => setQuantity(event.target.value)}
-                required
-              />
-            </FormField>
-            <FormField label="Unit">
-              <Input
-                value={unit}
-                onChange={(event) => setUnit(event.target.value)}
-                required
-              />
-            </FormField>
-          </Grid>
-          <Button
-            className="mt-4"
-            block
-            type="submit"
-            disabled={!selected || add.isPending}
-          >
-            {add.isPending ? "Adding…" : "Add to pantry"}
-          </Button>
-          {(add.isError || remove.isError) && (
-            <Alert className="mt-3">
-              The pantry could not be updated. Check for a duplicate and try
-              again.
-            </Alert>
+        <FlexCol gap="lg">
+          <PantryScanPanel />
+          {scannedIngredients.length > 0 && (
+            <Section>
+              <Heading level={2} variant="section">
+                Scanned ingredients ({scannedIngredients.length})
+              </Heading>
+              <Text className="mt-2" variant="subtle">
+                Confirm the matching catalog ingredient, adjust its values, and
+                add each item to your pantry.
+              </Text>
+              <FlexCol className="mt-4" gap="lg">
+                {scannedIngredients.map((ingredient) => (
+                  <AddPantryIngredientCard
+                    key={ingredient.id}
+                    title={ingredient.productName}
+                    description={`${
+                      ingredient.source === "receipt"
+                        ? "Receipt item"
+                        : "Product scan"
+                    } · ${ingredient.productType} · ${Math.round(
+                      ingredient.confidence * 100,
+                    )}% confidence`}
+                    initialValues={{
+                      ingredientQuery: ingredient.ingredientQuery,
+                      quantity: ingredient.quantity,
+                      unit: ingredient.unit,
+                      expiresOn: ingredient.expiresOn,
+                    }}
+                    onAdded={() => removeScannedIngredient(ingredient.id)}
+                    onDiscard={() => removeScannedIngredient(ingredient.id)}
+                  />
+                ))}
+              </FlexCol>
+            </Section>
           )}
-        </Card>
+          <AddPantryIngredientCard />
+        </FlexCol>
       </Grid>
     </Page>
   );

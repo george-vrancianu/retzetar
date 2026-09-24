@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout.tsx";
 import { RequireAuth } from "./components/RequireAuth.tsx";
+import { AdminIngredientsPage } from "./pages/AdminIngredientsPage.tsx";
 import { AuthPage } from "./pages/AuthPage.tsx";
 import { CartPage } from "./pages/CartPage.tsx";
 import { DashboardPage } from "./pages/DashboardPage.tsx";
@@ -23,6 +24,7 @@ function App() {
           <Route path="pantry" element={<PantryPage />} />
           <Route path="favorites" element={<FavoritesPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="admin" element={<AdminIngredientsPage />} />
           <Route path="carts/:id?" element={<CartPage />} />
         </Route>
       </Route>

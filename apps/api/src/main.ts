@@ -15,13 +15,18 @@ import type { AppConfig } from './config/env';
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    new FastifyAdapter({ bodyLimit: 12 * 1024 * 1024 }),
   );
   const config = app.get(ConfigService<AppConfig, true>);
 
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: config.get('CLIENT_ORIGIN', { infer: true }),
+    origin: [
+      config.get('CLIENT_ORIGIN', { infer: true }),
+      'http://localhost:5174',
+      'http://127.0.0.1:5174',
+      /^http:\/\/192\.168\.1\.(?:25[0-5]|2[0-4]\d|1?\d?\d):5174$/,
+    ],
     credentials: true,
   });
 

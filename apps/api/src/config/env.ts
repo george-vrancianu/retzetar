@@ -9,6 +9,8 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.url(),
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.url(),
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_VISION_MODEL: z.string().min(1).default('gpt-4o-mini'),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

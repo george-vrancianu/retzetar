@@ -1,5 +1,5 @@
 const apiOrigin = (
-  import.meta.env.VITE_API_URL ?? "http://localhost:3000"
+  import.meta.env.VITE_API_URL ?? `http://${window.location.hostname}:3000`
 ).replace(/\/$/, "");
 
 export class ApiError extends Error {
@@ -70,6 +70,28 @@ export type PantryItem = {
   expiresAt: string | null;
 };
 
+export type ProductScanResult = {
+  productName: string;
+  productType: string;
+  ingredientQuery: string;
+  expiryDate: string | null;
+  expiryText: string | null;
+  confidence: number;
+};
+
+export type ReceiptScanResult = {
+  merchantName: string | null;
+  purchaseDate: string | null;
+  items: Array<{
+    productName: string;
+    productType: string;
+    ingredientQuery: string;
+    quantity: number;
+    unit: string;
+    confidence: number;
+  }>;
+};
+
 export type Cart = {
   id: string;
   name: string;
@@ -90,6 +112,7 @@ export type UserProfile = {
   id: string;
   name: string;
   email: string;
+  role: "admin" | "regular";
   displayName: string;
   bio: string | null;
   avatarUrl: string | null;
@@ -146,9 +169,23 @@ export const api = {
     ingredientId: string;
     quantity: number;
     unit: string;
+    expiresAt?: string | null;
   }) =>
     request<PantryItem>("/pantry", {
       method: "POST",
+      body: JSON.stringify(input),
+    }),
+  scanProduct: (input: {
+    productImage: string;
+    expiryImage?: string | null;
+  }) =>
+    request<ProductScanResult>('/pantry/scan-product', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  scanReceipt: (input: { receiptImage: string }) =>
+    request<ReceiptScanResult>('/pantry/scan-receipt', {
+      method: 'POST',
       body: JSON.stringify(input),
     }),
   removePantry: (id: string) =>
@@ -184,5 +221,39 @@ export const api = {
       cart: Cart;
     }>(`/carts/${cartId}/recipes/${recipeId}/missing-ingredients`, {
       method: "POST",
+    }),
+  adminIngredientCategories: () =>
+    request<Array<{ id: string; name: string }>>("/admin/ingredients/categories"),
+  createAdminIngredientCategory: (name: string) =>
+    request<{ id: string; name: string }>("/admin/ingredients/categories", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
+  adminIngredients: (q: string) =>
+    request<Array<{ id: string; name: string; defaultUnit: string; categoryId: string; category: string }>>(
+      `/admin/ingredients?q=${encodeURIComponent(q)}`,
+    ),
+  createAdminIngredient: (input: { name: string; defaultUnit: string; categoryId?: string }) =>
+    request<{
+      id: string;
+      name: string;
+      defaultUnit: string;
+      categoryId: string;
+      category: string;
+    }>("/admin/ingredients", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  updateAdminIngredient: (
+    id: string,
+    input: { name: string; defaultUnit: string; categoryId?: string },
+  ) =>
+    request(`/admin/ingredients/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
+  removeAdminIngredient: (id: string) =>
+    request<{ id: string }>(`/admin/ingredients/${id}`, {
+      method: "DELETE",
     }),
 };
