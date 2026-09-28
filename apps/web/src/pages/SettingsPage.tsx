@@ -17,6 +17,7 @@ import {
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { ErrorState, LoadingState } from "../components/QueryState.tsx";
 import { api, type UserProfile } from "../lib/api.ts";
+import { localeOptions } from "../lib/locale-options.ts";
 
 const selectedValues = (event: ChangeEvent<HTMLSelectElement>) =>
   Array.from(event.currentTarget.selectedOptions, (option) => option.value);
@@ -33,6 +34,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
   });
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [bio, setBio] = useState(profile.bio ?? "");
+  const [locale, setLocale] = useState(profile.locale);
   const [preferredDietTypeIds, setPreferredDietTypeIds] = useState(
     profile.dietary.preferredDietTypes.map((dietType) => dietType.id),
   );
@@ -47,6 +49,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
       api.updateProfile({
         displayName,
         bio: bio || null,
+        locale,
         dietary: {
           preferredDietTypeIds,
           allergicIngredientIds,
@@ -83,6 +86,24 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
           maxLength={500}
           onChange={(event) => setBio(event.target.value)}
         />
+      </FormField>
+      <FormField
+        label="Locale"
+        hint="Helps recognize local product names, package and receipt abbreviations, and dates."
+      >
+        <Select
+          value={locale}
+          onChange={(event) => setLocale(event.target.value)}
+        >
+          {!localeOptions.some((option) => option.value === locale) && (
+            <Option value={locale}>{locale}</Option>
+          )}
+          {localeOptions.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
+        </Select>
       </FormField>
       <FormField
         label="Preferred diet types"

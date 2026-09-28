@@ -1,14 +1,24 @@
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { and, eq, sql } from 'drizzle-orm';
 import { DATABASE } from '../database/database.constants';
 import type { Database } from '../database/database.types';
-import { ingredients, pantryIngredients } from '../database/schema';
+import {
+  ingredientCategories,
+  ingredients,
+  pantryIngredients,
+} from '../database/schema';
 import type { PantryItemInput, PantryUpdateInput } from './pantry.schemas';
+
+const pantryItemSelection = {
+  id: pantryIngredients.id,
+  ingredientId: pantryIngredients.ingredientId,
+  ingredientName: ingredients.name,
+  name: sql<string>`coalesce(${pantryIngredients.name}, ${ingredients.name})`,
+  category: ingredientCategories.name,
+  quantity: pantryIngredients.quantity,
+  unit: pantryIngredients.unit,
+  expiresAt: pantryIngredients.expiresAt,
+};
 
 @Injectable()
 export class PantryService {
@@ -16,42 +26,30 @@ export class PantryService {
 
   list(userId: string) {
     return this.database
-      .select({
-        id: pantryIngredients.id,
-        ingredientId: pantryIngredients.ingredientId,
-        name: ingredients.name,
-        quantity: pantryIngredients.quantity,
-        unit: pantryIngredients.unit,
-        expiresAt: pantryIngredients.expiresAt,
-      })
+      .select(pantryItemSelection)
       .from(pantryIngredients)
       .innerJoin(
         ingredients,
         eq(pantryIngredients.ingredientId, ingredients.id),
       )
+      .innerJoin(
+        ingredientCategories,
+        eq(ingredients.categoryId, ingredientCategories.id),
+      )
       .where(eq(pantryIngredients.userId, userId))
-      .orderBy(ingredients.name);
+      .orderBy(ingredients.name, pantryIngredients.createdAt);
   }
 
   async create(userId: string, input: PantryItemInput) {
-    try {
-      const rows = await this.database
-        .insert(pantryIngredients)
-        .values({
-          ...input,
-          userId,
-          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
-        })
-        .returning();
-      return rows[0];
-    } catch (error: unknown) {
-      if ((error as { code?: string }).code === '23505') {
-        throw new ConflictException(
-          'That ingredient and unit are already in your pantry',
-        );
-      }
-      throw error;
-    }
+    const [row] = await this.database
+      .insert(pantryIngredients)
+      .values({
+        ...input,
+        userId,
+        expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+      })
+      .returning({ id: pantryIngredients.id });
+    return this.getOne(userId, row.id);
   }
 
   async update(userId: string, id: string, input: PantryUpdateInput) {
@@ -70,9 +68,29 @@ export class PantryService {
       .where(
         and(eq(pantryIngredients.id, id), eq(pantryIngredients.userId, userId)),
       )
-      .returning();
+      .returning({ id: pantryIngredients.id });
     if (!rows[0]) throw new NotFoundException('Pantry item not found');
-    return rows[0];
+    return this.getOne(userId, rows[0].id);
+  }
+
+  private async getOne(userId: string, id: string) {
+    const [item] = await this.database
+      .select(pantryItemSelection)
+      .from(pantryIngredients)
+      .innerJoin(
+        ingredients,
+        eq(pantryIngredients.ingredientId, ingredients.id),
+      )
+      .innerJoin(
+        ingredientCategories,
+        eq(ingredients.categoryId, ingredientCategories.id),
+      )
+      .where(
+        and(eq(pantryIngredients.id, id), eq(pantryIngredients.userId, userId)),
+      )
+      .limit(1);
+    if (!item) throw new NotFoundException('Pantry item not found');
+    return item;
   }
 
   async remove(userId: string, id: string) {

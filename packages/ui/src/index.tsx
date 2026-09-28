@@ -1,7 +1,10 @@
 import {
   createElement,
   useId,
+  useLayoutEffect,
+  useRef,
   useState,
+  type CSSProperties,
   type ComponentPropsWithoutRef,
   type ElementType,
   type KeyboardEvent,
@@ -53,12 +56,71 @@ export function AppHeaderInner({
 }
 
 export function AppMain({
+  wide = false,
   className,
   ...props
-}: ComponentPropsWithoutRef<"main">) {
+}: ComponentPropsWithoutRef<"main"> & { wide?: boolean }) {
   return (
-    <main className={cx("mx-auto max-w-6xl px-4 py-8", className)} {...props} />
+    <main
+      className={cx(
+        "mx-auto px-4 py-8",
+        wide ? "max-w-[100rem]" : "max-w-6xl",
+        className,
+      )}
+      {...props}
+    />
   );
+}
+
+export function Table({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"table">) {
+  return (
+    <table
+      className={cx("w-full text-left text-sm whitespace-nowrap", className)}
+      {...props}
+    />
+  );
+}
+
+export function TableHead(props: ComponentPropsWithoutRef<"thead">) {
+  return <thead {...props} />;
+}
+
+export function TableBody(props: ComponentPropsWithoutRef<"tbody">) {
+  return <tbody {...props} />;
+}
+
+export function TableRow({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"tr">) {
+  return (
+    <tr
+      className={cx("border-b border-slate-200 last:border-0", className)}
+      {...props}
+    />
+  );
+}
+
+export function TableHeader({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"th">) {
+  return (
+    <th
+      className={cx("px-3 py-3 font-semibold text-slate-600", className)}
+      {...props}
+    />
+  );
+}
+
+export function TableCell({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"td">) {
+  return <td className={cx("px-3 py-3 align-middle", className)} {...props} />;
 }
 
 export function CenteredLayout({
@@ -653,6 +715,7 @@ export function ErrorState({
 
 export type ComboboxOption = { id: string; label: string };
 export type SearchComboboxProps = ClassNameProp & {
+  compact?: boolean;
   label: ReactNode;
   value: string;
   onChange: (value: string) => void;
@@ -663,6 +726,7 @@ export type SearchComboboxProps = ClassNameProp & {
   resultsLabel?: string;
 };
 export function SearchCombobox({
+  compact = false,
   label,
   value,
   onChange,
@@ -677,8 +741,35 @@ export function SearchCombobox({
   const listId = `${id}-listbox`;
   const [activeIndex, setActiveIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
-  const open = options.length > 0 && !dismissed;
+  const [focused, setFocused] = useState(false);
+  const anchor = useRef<HTMLDivElement>(null);
+  const [popupStyle, setPopupStyle] = useState<CSSProperties>();
+  const open = options.length > 0 && !dismissed && (!compact || focused);
   const currentIndex = Math.min(activeIndex, Math.max(options.length - 1, 0));
+
+  // Fixed positioning keeps table search results outside the scroll container.
+  useLayoutEffect(() => {
+    if (!compact || !open) return;
+    const position = () => {
+      const bounds = anchor.current?.getBoundingClientRect();
+      if (!bounds) return;
+      const width = Math.min(bounds.width, window.innerWidth - 16);
+      const below = window.innerHeight - bounds.bottom;
+      setPopupStyle({
+        width,
+        left: Math.max(8, Math.min(bounds.left, window.innerWidth - width - 8)),
+        top: below >= 176 ? bounds.bottom + 4 : undefined,
+        bottom: below < 176 ? window.innerHeight - bounds.top + 4 : undefined,
+      });
+    };
+    position();
+    window.addEventListener("resize", position);
+    window.addEventListener("scroll", position, true);
+    return () => {
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+    };
+  }, [compact, open]);
 
   const choose = (option: ComboboxOption) => {
     onSelect(option);
@@ -709,8 +800,10 @@ export function SearchCombobox({
   };
 
   return (
-    <div className={cx("relative", className)}>
-      <FormField label={label}>
+    <div ref={anchor} className={cx("relative", className)}>
+      <FormField
+        label={compact ? <VisuallyHidden>{label}</VisuallyHidden> : label}
+      >
         <Input
           type="search"
           role="combobox"
@@ -722,6 +815,11 @@ export function SearchCombobox({
           }
           value={value}
           placeholder={placeholder}
+          onFocus={() => {
+            setFocused(true);
+            setDismissed(false);
+          }}
+          onBlur={() => setFocused(false)}
           onChange={(event) => {
             setActiveIndex(0);
             setDismissed(false);
@@ -730,11 +828,19 @@ export function SearchCombobox({
           onKeyDown={onKeyDown}
         />
       </FormField>
-      {loading && <Status className="mt-2 text-slate-800">Searching…</Status>}
+      {loading && (
+        <Status className={compact ? "sr-only" : "mt-2 text-slate-800"}>
+          Searching…
+        </Status>
+      )}
       <ul
         id={listId}
         hidden={!open}
-        className="absolute z-10 mt-2 max-h-40 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"
+        className={cx(
+          "max-h-40 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg",
+          compact ? "fixed z-50" : "absolute z-10 mt-2 w-full",
+        )}
+        style={compact ? popupStyle : undefined}
         role="listbox"
         aria-label={resultsLabel}
       >

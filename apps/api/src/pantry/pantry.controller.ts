@@ -13,6 +13,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import type { CurrentUser as User } from '../auth/auth.types';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { UsersService } from '../users/users.service';
 import {
   pantryIdSchema,
   pantryItemSchema,
@@ -41,6 +42,7 @@ export class PantryController {
     private readonly pantry: PantryService,
     private readonly productScan: ProductScanService,
     private readonly receiptScan: ReceiptScanService,
+    private readonly users: UsersService,
   ) {}
 
   @Get()
@@ -57,17 +59,19 @@ export class PantryController {
   }
 
   @Post('scan-product')
-  scanProduct(
+  async scanProduct(
+    @CurrentUser() user: User,
     @Body(new ZodValidationPipe(productScanSchema)) input: ProductScanInput,
   ) {
-    return this.productScan.analyze(input);
+    return this.productScan.analyze(input, await this.users.getLocale(user.id));
   }
 
   @Post('scan-receipt')
-  scanReceipt(
+  async scanReceipt(
+    @CurrentUser() user: User,
     @Body(new ZodValidationPipe(receiptScanSchema)) input: ReceiptScanInput,
   ) {
-    return this.receiptScan.analyze(input);
+    return this.receiptScan.analyze(input, await this.users.getLocale(user.id));
   }
 
   @Patch(':id')

@@ -64,7 +64,9 @@ export type RecipeDetail = Recipe & {
 export type PantryItem = {
   id: string;
   ingredientId: string;
+  ingredientName: string;
   name: string;
+  category: string;
   quantity: number;
   unit: string;
   expiresAt: string | null;
@@ -73,21 +75,74 @@ export type PantryItem = {
 export type ProductScanResult = {
   productName: string;
   productType: string;
-  ingredientQuery: string;
+  matchedIngredientId: string | null;
+  matchedIngredientName: string | null;
+  matchedIngredientDefaultUnit: string | null;
+  matchedCategory: string | null;
+  matchConfidence: number;
+  fallbackIngredientName: string;
   expiryDate: string | null;
   expiryText: string | null;
   confidence: number;
 };
 
+export type ReceiptScanLineType =
+  | "product"
+  | "discount"
+  | "fee"
+  | "deposit"
+  | "subtotal"
+  | "tax"
+  | "total"
+  | "payment"
+  | "other";
+
+export type ReceiptScanQuantityType = "count" | "package_size" | "measured";
+
 export type ReceiptScanResult = {
   merchantName: string | null;
   purchaseDate: string | null;
+  lines: Array<{
+    lineNumber: number;
+    sourceText: string;
+    lineType: ReceiptScanLineType;
+    includeInPantry: boolean;
+    exclusionReason: string | null;
+    productName: string | null;
+    productType: string | null;
+    matchedIngredientId: string | null;
+    matchedIngredientName: string | null;
+    matchedIngredientDefaultUnit: string | null;
+    matchedCategory: string | null;
+    matchConfidence: number;
+    fallbackIngredientName: string | null;
+    matchExplanation: string;
+    quantityType: ReceiptScanQuantityType | null;
+    purchasedCount: number | null;
+    quantityPerItem: number | null;
+    quantityUnit: string | null;
+    quantity: number | null;
+    unit: string | null;
+    confidence: number;
+  }>;
   items: Array<{
+    lineNumber: number;
+    sourceText: string;
     productName: string;
     productType: string;
-    ingredientQuery: string;
-    quantity: number;
-    unit: string;
+    matchedIngredientId: string | null;
+    matchedIngredientName: string | null;
+    matchedIngredientDefaultUnit: string | null;
+    matchedCategory: string | null;
+    matchConfidence: number;
+    fallbackIngredientName: string;
+    matchExplanation: string;
+    quantityType: ReceiptScanQuantityType | null;
+    purchasedCount: number | null;
+    quantityPerItem: number | null;
+    quantityUnit: string | null;
+    quantity: number | null;
+    unit: string | null;
     confidence: number;
   }>;
 };
@@ -167,6 +222,7 @@ export const api = {
   pantry: () => request<PantryItem[]>("/pantry"),
   addPantry: (input: {
     ingredientId: string;
+    name?: string | null;
     quantity: number;
     unit: string;
     expiresAt?: string | null;
@@ -175,17 +231,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
-  scanProduct: (input: {
-    productImage: string;
-    expiryImage?: string | null;
-  }) =>
-    request<ProductScanResult>('/pantry/scan-product', {
-      method: 'POST',
+  scanProduct: (input: { productImage: string; expiryImage?: string | null }) =>
+    request<ProductScanResult>("/pantry/scan-product", {
+      method: "POST",
       body: JSON.stringify(input),
     }),
   scanReceipt: (input: { receiptImage: string }) =>
-    request<ReceiptScanResult>('/pantry/scan-receipt', {
-      method: 'POST',
+    request<ReceiptScanResult>("/pantry/scan-receipt", {
+      method: "POST",
       body: JSON.stringify(input),
     }),
   removePantry: (id: string) =>
@@ -223,17 +276,29 @@ export const api = {
       method: "POST",
     }),
   adminIngredientCategories: () =>
-    request<Array<{ id: string; name: string }>>("/admin/ingredients/categories"),
+    request<Array<{ id: string; name: string }>>(
+      "/admin/ingredients/categories",
+    ),
   createAdminIngredientCategory: (name: string) =>
     request<{ id: string; name: string }>("/admin/ingredients/categories", {
       method: "POST",
       body: JSON.stringify({ name }),
     }),
   adminIngredients: (q: string) =>
-    request<Array<{ id: string; name: string; defaultUnit: string; categoryId: string; category: string }>>(
-      `/admin/ingredients?q=${encodeURIComponent(q)}`,
-    ),
-  createAdminIngredient: (input: { name: string; defaultUnit: string; categoryId?: string }) =>
+    request<
+      Array<{
+        id: string;
+        name: string;
+        defaultUnit: string;
+        categoryId: string;
+        category: string;
+      }>
+    >(`/admin/ingredients?q=${encodeURIComponent(q)}`),
+  createAdminIngredient: (input: {
+    name: string;
+    defaultUnit: string;
+    categoryId?: string;
+  }) =>
     request<{
       id: string;
       name: string;

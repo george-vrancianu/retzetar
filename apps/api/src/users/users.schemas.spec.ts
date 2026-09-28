@@ -19,6 +19,18 @@ describe('updateProfileSchema', () => {
     });
   });
 
+  it('accepts regional locales and rejects malformed locale values', () => {
+    expect(updateProfileSchema.safeParse({ locale: 'ro-RO' }).success).toBe(
+      true,
+    );
+    expect(updateProfileSchema.safeParse({ locale: 'en-GB' }).success).toBe(
+      true,
+    );
+    expect(updateProfileSchema.safeParse({ locale: 'invalid' }).success).toBe(
+      false,
+    );
+  });
+
   it('rejects duplicate selections and empty updates', () => {
     expect(
       updateProfileSchema.safeParse({

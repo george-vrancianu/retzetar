@@ -25,7 +25,10 @@ describe('product scan schemas', () => {
     const result = {
       productName: 'Plain Greek yogurt',
       productType: 'Dairy product',
-      ingredientQuery: 'Yogurt',
+      matchedIngredientId: 'be0ef2e7-75ea-47d8-b9bf-fc890d64db8e',
+      matchedCategory: 'Dairy',
+      matchConfidence: 0.91,
+      fallbackIngredientName: 'Yogurt',
       expiryDate: '2026-10-14',
       expiryText: 'EXP 14/10/26',
       confidence: 0.94,

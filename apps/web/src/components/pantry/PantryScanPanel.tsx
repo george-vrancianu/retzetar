@@ -40,6 +40,9 @@ export function PantryScanPanel() {
   const addIngredients = useScannedIngredientsStore(
     (state) => state.addIngredients,
   );
+  const addReceiptScan = useScannedIngredientsStore(
+    (state) => state.addReceiptScan,
+  );
   const [productOpen, setProductOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [productPhoto, setProductPhoto] = useState<File | null>(null);
@@ -65,7 +68,12 @@ export function PantryScanPanel() {
           source: "product",
           productName: result.productName,
           productType: result.productType,
-          ingredientQuery: result.ingredientQuery,
+          matchedIngredientId: result.matchedIngredientId,
+          matchedIngredientName: result.matchedIngredientName,
+          matchedIngredientDefaultUnit: result.matchedIngredientDefaultUnit,
+          matchedCategory: result.matchedCategory,
+          matchConfidence: result.matchConfidence,
+          fallbackIngredientName: result.fallbackIngredientName,
           quantity: 1,
           unit: "",
           expiresOn: expiresOn || result.expiryDate || "",
@@ -82,14 +90,43 @@ export function PantryScanPanel() {
     mutationFn: async (receipt: File) =>
       api.scanReceipt({ receiptImage: await prepareImage(receipt) }),
     onSuccess: (result) => {
+      addReceiptScan({
+        merchantName: result.merchantName,
+        purchaseDate: result.purchaseDate,
+        lines: result.lines.map((line) => ({
+          lineNumber: line.lineNumber,
+          sourceText: line.sourceText,
+          lineType: line.lineType,
+          includeInPantry: line.includeInPantry,
+          exclusionReason: line.exclusionReason,
+          productName: line.productName,
+          matchedIngredientId: line.matchedIngredientId,
+          matchedIngredientName: line.matchedIngredientName,
+          matchedCategory: line.matchedCategory,
+          matchConfidence: line.matchConfidence,
+          fallbackIngredientName: line.fallbackIngredientName,
+          matchExplanation: line.matchExplanation,
+          quantityType: line.quantityType,
+          purchasedCount: line.purchasedCount,
+          quantityPerItem: line.quantityPerItem,
+          quantityUnit: line.quantityUnit,
+          quantity: line.quantity,
+          unit: line.unit,
+        })),
+      });
       addIngredients(
         result.items.map((item) => ({
           source: "receipt" as const,
           productName: item.productName,
           productType: item.productType,
-          ingredientQuery: item.ingredientQuery,
+          matchedIngredientId: item.matchedIngredientId,
+          matchedIngredientName: item.matchedIngredientName,
+          matchedIngredientDefaultUnit: item.matchedIngredientDefaultUnit,
+          matchedCategory: item.matchedCategory,
+          matchConfidence: item.matchConfidence,
+          fallbackIngredientName: item.fallbackIngredientName,
           quantity: item.quantity,
-          unit: item.unit,
+          unit: item.unit ?? "",
           expiresOn: "",
           confidence: item.confidence,
         })),
@@ -114,7 +151,7 @@ export function PantryScanPanel() {
         aria-expanded={productOpen}
         onClick={() => setProductOpen((open) => !open)}
       >
-        {productOpen ? "Hide product scanner" : "Scan a product"}
+        {productOpen ? "Hide product scanner" : "Scan product"}
       </Button>
       {productOpen && (
         <Card variant="compact" className="mt-4 space-y-4">
@@ -163,12 +200,12 @@ export function PantryScanPanel() {
             {productScan.isPending ? "Reading photos…" : "Read product"}
           </Button>
           {productScan.isError && (
-            <Alert>The product photos could not be read. Please try again.</Alert>
+            <Alert>
+              The product photos could not be read. Please try again.
+            </Alert>
           )}
           {productScan.isSuccess && (
-            <Alert variant="info">
-              Product added to the scanned ingredient queue below.
-            </Alert>
+            <Alert variant="info">Product added to the review table.</Alert>
           )}
         </Card>
       )}
@@ -181,7 +218,7 @@ export function PantryScanPanel() {
         aria-expanded={receiptOpen}
         onClick={() => setReceiptOpen((open) => !open)}
       >
-        {receiptOpen ? "Hide receipt scanner" : "Scan a receipt"}
+        {receiptOpen ? "Hide receipt scanner" : "Scan receipt"}
       </Button>
       {receiptOpen && (
         <Card variant="compact" className="mt-4 space-y-4">
@@ -209,7 +246,10 @@ export function PantryScanPanel() {
             {receiptScan.isPending ? "Reading receipt…" : "Read receipt"}
           </Button>
           {receiptScan.isError && (
-            <Alert>The receipt could not be read. Please try a clearer photo.</Alert>
+            <Alert>
+              {receiptScan.error.message ||
+                "The receipt could not be read. Please try a clearer photo."}
+            </Alert>
           )}
           {receiptScan.data && (
             <Alert variant="info">
@@ -217,7 +257,7 @@ export function PantryScanPanel() {
                 ? "No grocery items were found on this receipt."
                 : `${receiptScan.data.items.length} grocery item${
                     receiptScan.data.items.length === 1 ? "" : "s"
-                  } added to the queue below.`}
+                  } added to the review table.`}
             </Alert>
           )}
         </Card>

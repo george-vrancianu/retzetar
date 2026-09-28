@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const pantryItemSchema = z.object({
   ingredientId: z.uuid(),
+  name: z.string().trim().min(1).max(120).nullable().optional(),
   quantity: z.number().positive(),
   unit: z.string().trim().min(1).max(30),
   expiresAt: z.iso.datetime().nullable().optional(),

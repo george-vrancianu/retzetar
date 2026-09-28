@@ -30,6 +30,15 @@ type DietaryPreferences = {
 export class UsersService {
   constructor(@Inject(DATABASE) private readonly database: Database) {}
 
+  async getLocale(userId: string): Promise<string> {
+    const [preferences] = await this.database
+      .select({ locale: userPreferences.locale })
+      .from(userPreferences)
+      .where(eq(userPreferences.userId, userId))
+      .limit(1);
+    return preferences?.locale ?? 'ro-RO';
+  }
+
   async getProfile(userId: string) {
     const [rows, dietary] = await Promise.all([
       this.database
@@ -59,7 +68,7 @@ export class UsersService {
       ...profile,
       displayName: profile.displayName ?? profile.name,
       avatarUrl: profile.avatarUrl ?? profile.image,
-      locale: profile.locale ?? 'en',
+      locale: profile.locale ?? 'ro-RO',
       dietary,
     };
   }

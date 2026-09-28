@@ -9,7 +9,7 @@ import {
   Navigation,
 } from "@retzetar/ui";
 import { useQuery } from "@tanstack/react-query";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useMatch, useNavigate } from "react-router-dom";
 import { authClient } from "../lib/auth-client.ts";
 import { api } from "../lib/api.ts";
 
@@ -23,13 +23,13 @@ const navigation = [
 ] as const;
 
 export function AppLayout() {
+  const addingIngredients = useMatch("/pantry/add");
   const session = authClient.useSession();
   const navigate = useNavigate();
   const profile = useQuery({
     queryKey: ["profile"],
     queryFn: api.profile,
     enabled: Boolean(session.data),
-
   });
   const signOut = async () => {
     await authClient.signOut();
@@ -78,7 +78,7 @@ export function AppLayout() {
           </FlexRow>
         </AppHeaderInner>
       </AppHeader>
-      <AppMain>
+      <AppMain wide={Boolean(addingIngredients)}>
         <Outlet />
       </AppMain>
     </AppShell>

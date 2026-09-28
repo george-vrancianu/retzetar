@@ -7,6 +7,7 @@ import { CartPage } from "./pages/CartPage.tsx";
 import { DashboardPage } from "./pages/DashboardPage.tsx";
 import { FavoritesPage } from "./pages/FavoritesPage.tsx";
 import { PantryPage } from "./pages/PantryPage.tsx";
+import { AddPantryPage } from "./pages/AddPantryPage.tsx";
 import { RecipeDetailPage } from "./pages/RecipeDetailPage.tsx";
 import { RecipesPage } from "./pages/RecipesPage.tsx";
 import { SettingsPage } from "./pages/SettingsPage.tsx";
@@ -22,6 +23,7 @@ function App() {
         <Route element={<RequireAuth />}>
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="pantry" element={<PantryPage />} />
+          <Route path="pantry/add" element={<AddPantryPage />} />
           <Route path="favorites" element={<FavoritesPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="admin" element={<AdminIngredientsPage />} />

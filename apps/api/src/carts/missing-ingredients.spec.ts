@@ -19,6 +19,20 @@ describe('calculateMissingIngredients', () => {
     ]);
   });
 
+  it('sums multiple pantry entries for the same ingredient and unit', () => {
+    expect(
+      calculateMissingIngredients(
+        [{ ingredientId: 'milk', name: 'Milk', quantity: 3, unit: 'l' }],
+        [
+          { ingredientId: 'milk', quantity: 1, unit: 'l' },
+          { ingredientId: 'milk', quantity: 1.5, unit: 'L' },
+        ],
+      ),
+    ).toEqual([
+      { ingredientId: 'milk', name: 'Milk', quantity: 0.5, unit: 'l' },
+    ]);
+  });
+
   it('does not convert incompatible units implicitly', () => {
     expect(
       calculateMissingIngredients(

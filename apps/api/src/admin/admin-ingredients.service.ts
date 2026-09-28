@@ -8,6 +8,7 @@ import { eq, ilike } from 'drizzle-orm';
 import { DATABASE } from '../database/database.constants';
 import type { Database } from '../database/database.types';
 import { ingredientCategories, ingredients } from '../database/schema';
+import { IngredientCatalogService } from '../ingredients/ingredient-catalog.service';
 import type {
   CreateAdminIngredientInput,
   UpdateAdminIngredientInput,
@@ -18,7 +19,10 @@ const normalizeName = (name: string) =>
 
 @Injectable()
 export class AdminIngredientsService {
-  constructor(@Inject(DATABASE) private readonly database: Database) {}
+  constructor(
+    @Inject(DATABASE) private readonly database: Database,
+    private readonly catalog: IngredientCatalogService,
+  ) {}
 
   list(query: string) {
     return this.database
@@ -55,12 +59,18 @@ export class AdminIngredientsService {
       .where(eq(ingredientCategories.normalizedName, normalizedName))
       .limit(1);
     if (existing[0]) {
-      throw new ConflictException('An ingredient category with this name exists');
+      throw new ConflictException(
+        'An ingredient category with this name exists',
+      );
     }
     const rows = await this.database
       .insert(ingredientCategories)
       .values({ name, normalizedName })
-      .returning({ id: ingredientCategories.id, name: ingredientCategories.name });
+      .returning({
+        id: ingredientCategories.id,
+        name: ingredientCategories.name,
+      });
+    this.catalog.invalidate();
     return rows[0];
   }
 
@@ -79,6 +89,7 @@ export class AdminIngredientsService {
         categoryId,
       })
       .returning();
+    this.catalog.invalidate();
     return rows[0];
   }
 
@@ -109,6 +120,7 @@ export class AdminIngredientsService {
       })
       .where(eq(ingredients.id, id))
       .returning();
+    this.catalog.invalidate();
     return rows[0];
   }
 
@@ -116,6 +128,7 @@ export class AdminIngredientsService {
     await this.find(id);
     try {
       await this.database.delete(ingredients).where(eq(ingredients.id, id));
+      this.catalog.invalidate();
     } catch (error) {
       if (
         typeof error === 'object' &&

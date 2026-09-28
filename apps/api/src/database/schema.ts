@@ -119,7 +119,7 @@ export const userPreferences = pgTable('user_preferences', {
   userId: text('user_id')
     .primaryKey()
     .references(() => user.id, { onDelete: 'cascade' }),
-  locale: text('locale').notNull().default('en'),
+  locale: text('locale').notNull().default('ro-RO'),
   ...timestamps,
 });
 
@@ -295,18 +295,13 @@ export const pantryIngredients = pgTable(
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
+    name: text('name'),
     quantity: doublePrecision('quantity').notNull(),
     unit: text('unit').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [
-    uniqueIndex('pantry_user_ingredient_unit_idx').on(
-      table.userId,
-      table.ingredientId,
-      table.unit,
-    ),
-  ],
+  (table) => [index('pantry_user_id_idx').on(table.userId)],
 );
 
 export const favoriteRecipes = pgTable(
