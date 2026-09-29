@@ -1,16 +1,16 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./components/AppLayout.tsx";
 import { RequireAuth } from "./components/RequireAuth.tsx";
-import { AdminIngredientsPage } from "./pages/AdminIngredientsPage.tsx";
-import { AuthPage } from "./pages/AuthPage.tsx";
-import { CartPage } from "./pages/CartPage.tsx";
-import { DashboardPage } from "./pages/DashboardPage.tsx";
-import { FavoritesPage } from "./pages/FavoritesPage.tsx";
-import { PantryPage } from "./pages/PantryPage.tsx";
-import { AddPantryPage } from "./pages/AddPantryPage.tsx";
-import { RecipeDetailPage } from "./pages/RecipeDetailPage.tsx";
-import { RecipesPage } from "./pages/RecipesPage.tsx";
-import { SettingsPage } from "./pages/SettingsPage.tsx";
+import { AddPantryPage } from "./pages/AddPantry/AddPantryPage.tsx";
+import { AdminIngredientsPage } from "./pages/AdminIngredients/AdminIngredientsPage.tsx";
+import { AuthPage } from "./pages/Auth/AuthPage.tsx";
+import { CartPage } from "./pages/Cart/CartPage.tsx";
+import { DashboardPage } from "./pages/Dashboard/DashboardPage.tsx";
+import { FavoritesPage } from "./pages/Favorites/FavoritesPage.tsx";
+import { PantryPage } from "./pages/Pantry/PantryPage.tsx";
+import { RecipeDetailPage } from "./pages/RecipeDetail/RecipeDetailPage.tsx";
+import { RecipesPage } from "./pages/Recipes/RecipesPage.tsx";
+import { SettingsPage } from "./pages/Settings/SettingsPage.tsx";
 
 function App() {
   return (
