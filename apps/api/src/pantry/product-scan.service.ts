@@ -1,13 +1,8 @@
-import {
-  BadGatewayException,
-  Injectable,
-  ServiceUnavailableException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import type { AppConfig } from '../config/env';
+import { BadGatewayException, Injectable } from '@nestjs/common';
+import { StructuredOutputAiService } from '../ai/structured-output-ai.service';
 import { IngredientCatalogService } from '../ingredients/ingredient-catalog.service';
 import {
-  parseProductScanOutput,
+  productScanModelResultSchema,
   type ProductScanInput,
   type ProductScanResult,
 } from './product-scan.schemas';
@@ -15,7 +10,7 @@ import {
 @Injectable()
 export class ProductScanService {
   constructor(
-    private readonly config: ConfigService<AppConfig, true>,
+    private readonly ai: StructuredOutputAiService,
     private readonly ingredientCatalog: IngredientCatalogService,
   ) {}
 
@@ -23,13 +18,6 @@ export class ProductScanService {
     input: ProductScanInput,
     locale: string,
   ): Promise<ProductScanResult> {
-    const apiKey = this.config.get('OPENAI_API_KEY', { infer: true });
-    if (!apiKey) {
-      throw new ServiceUnavailableException(
-        'Product scanning is not configured. Set OPENAI_API_KEY on the API server.',
-      );
-    }
-
     const catalog = await this.ingredientCatalog.getCatalog();
     const catalogPrompt = this.ingredientCatalog.toPrompt(catalog);
 
@@ -61,73 +49,46 @@ export class ProductScanService {
       });
     }
 
-    let response: Response;
     try {
-      response = await fetch('https://api.openai.com/v1/responses', {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${apiKey}`,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: this.config.get('OPENAI_VISION_MODEL', { infer: true }),
-          temperature: 0,
-          store: false,
-          input: [{ role: 'user', content }],
-          text: {
-            format: {
-              type: 'json_schema',
-              name: 'grocery_product_scan',
-              strict: true,
-              schema: {
-                type: 'object',
-                additionalProperties: false,
-                properties: {
-                  productName: { type: 'string' },
-                  productType: { type: 'string' },
-                  matchedIngredientId: { type: ['string', 'null'] },
-                  matchedCategory: { type: ['string', 'null'] },
-                  matchConfidence: {
-                    type: 'number',
-                    minimum: 0,
-                    maximum: 1,
-                  },
-                  fallbackIngredientName: { type: 'string' },
-                  expiryDate: { type: ['string', 'null'] },
-                  expiryText: { type: ['string', 'null'] },
-                  confidence: { type: 'number', minimum: 0, maximum: 1 },
-                },
-                required: [
-                  'productName',
-                  'productType',
-                  'matchedIngredientId',
-                  'matchedCategory',
-                  'matchConfidence',
-                  'fallbackIngredientName',
-                  'expiryDate',
-                  'expiryText',
-                  'confidence',
-                ],
-              },
+      const response = await this.ai.generate({
+        prompt: String(content[0].text),
+        images: content
+          .filter((item) => item.type === 'input_image')
+          .map((item) => String(item.image_url)),
+        schemaName: 'grocery_product_scan',
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            productName: { type: 'string' },
+            productType: { type: 'string' },
+            matchedIngredientId: { type: ['string', 'null'] },
+            matchedCategory: { type: ['string', 'null'] },
+            matchConfidence: {
+              type: 'number',
+              minimum: 0,
+              maximum: 1,
             },
+            fallbackIngredientName: { type: 'string' },
+            expiryDate: { type: ['string', 'null'] },
+            expiryText: { type: ['string', 'null'] },
+            confidence: { type: 'number', minimum: 0, maximum: 1 },
           },
-          max_output_tokens: 400,
-        }),
+          required: [
+            'productName',
+            'productType',
+            'matchedIngredientId',
+            'matchedCategory',
+            'matchConfidence',
+            'fallbackIngredientName',
+            'expiryDate',
+            'expiryText',
+            'confidence',
+          ],
+        },
+        maxOutputTokens: 400,
       });
-    } catch {
-      throw new BadGatewayException(
-        'The image recognition service is unavailable',
-      );
-    }
-
-    if (!response.ok) {
-      throw new BadGatewayException(
-        `The image recognition service returned ${response.status}`,
-      );
-    }
-
-    try {
-      const result = parseProductScanOutput(await response.json());
+      const result = productScanModelResultSchema.parse(response.data);
       return {
         ...result,
         ...this.ingredientCatalog.validateMatch(catalog, result),

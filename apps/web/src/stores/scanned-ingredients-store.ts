@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ScannedIngredientSource = "product" | "receipt";
+export type ScannedIngredientSource = "product" | "receipt" | "ingredients";
 
 export const HIGH_CONFIDENCE_MATCH = 0.8;
 

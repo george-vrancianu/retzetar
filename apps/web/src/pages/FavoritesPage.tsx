@@ -19,7 +19,7 @@ export function FavoritesPage() {
   return (
     <Page>
       <Heading>Favorite recipes</Heading>
-      <Text className="mt-2" variant="muted">
+      <Text sx={{ mt: 1 }} variant="muted">
         Your saved ideas, ready when you are.
       </Text>
       <Section spacing="lg">
@@ -48,7 +48,7 @@ export function FavoritesPage() {
           </Grid>
         )}
         {remove.isError && (
-          <Alert className="mt-4">Could not remove that favorite.</Alert>
+          <Alert sx={{ mt: 2 }}>Could not remove that favorite.</Alert>
         )}
       </Section>
     </Page>

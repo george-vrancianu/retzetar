@@ -9,6 +9,11 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.url(),
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.url(),
+  AI_PROVIDER: z.enum(['openai', 'openai-compatible']).default('openai'),
+  AI_API_KEY: z.string().min(1).optional(),
+  AI_BASE_URL: z.url().optional(),
+  AI_VISION_MODEL: z.string().min(1).optional(),
+  // Deprecated aliases kept so existing deployments continue to work.
   OPENAI_API_KEY: z.string().min(1).optional(),
   OPENAI_VISION_MODEL: z.string().min(1).default('gpt-4o-mini-2024-07-18'),
 });

@@ -80,7 +80,7 @@ export function ReceiptScanMatchReportCard({
           <Heading level={2} variant="card">
             Receipt match report
           </Heading>
-          <Text className="mt-1" variant="subtle">
+          <Text sx={{ mt: 0.5 }} variant="subtle">
             {receiptDetails || "Scanned receipt"} · {report.lines.length} line
             {report.lines.length === 1 ? "" : "s"} extracted · {pantryItems}{" "}
             pantry item{pantryItems === 1 ? "" : "s"}
@@ -92,29 +92,29 @@ export function ReceiptScanMatchReportCard({
       </FlexRow>
 
       {report.lines.length === 0 ? (
-        <Text className="mt-4" variant="subtle">
+        <Text sx={{ mt: 2 }} variant="subtle">
           No transaction lines could be extracted from this receipt.
         </Text>
       ) : (
-        <List className="mt-4" variant="stack">
+        <List sx={{ mt: 2 }} variant="stack">
           {report.lines.map((line) => {
             const quantity = quantityLabel(line);
             return (
               <Card as="li" key={line.lineNumber} variant="compact">
-                <Text className="font-bold">
+                <Text sx={{ fontWeight: 700 }}>
                   Line {line.lineNumber}: “{line.sourceText}”
                 </Text>
                 {line.productName && line.productName !== line.sourceText && (
-                  <Text className="mt-1" variant="subtle">
+                  <Text sx={{ mt: 0.5 }} variant="subtle">
                     Interpreted as: {line.productName}
                   </Text>
                 )}
-                <Text className="mt-2">{matchLabel(line)}</Text>
-                <Text className="mt-1" variant="subtle">
+                <Text sx={{ mt: 1 }}>{matchLabel(line)}</Text>
+                <Text sx={{ mt: 0.5 }} variant="subtle">
                   Why: {line.matchExplanation}
                 </Text>
                 {quantity && (
-                  <Text className="mt-1" variant="subtle">
+                  <Text sx={{ mt: 0.5 }} variant="subtle">
                     Quantity: {quantity}
                   </Text>
                 )}

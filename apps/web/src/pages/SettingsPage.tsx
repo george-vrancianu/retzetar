@@ -7,20 +7,18 @@ import {
   FormField,
   Heading,
   Input,
-  Page,
+  MultiSelectCombobox,
   Option,
+  Page,
   Select,
   Status,
   Text,
   Textarea,
 } from "@retzetar/ui";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { ErrorState, LoadingState } from "../components/QueryState.tsx";
 import { api, type UserProfile } from "../lib/api.ts";
 import { localeOptions } from "../lib/locale-options.ts";
-
-const selectedValues = (event: ChangeEvent<HTMLSelectElement>) =>
-  Array.from(event.currentTarget.selectedOptions, (option) => option.value);
 
 function ProfileForm({ profile }: { profile: UserProfile }) {
   const queryClient = useQueryClient();
@@ -44,6 +42,15 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
   const [dislikedIngredientIds, setDislikedIngredientIds] = useState(
     profile.dietary.dislikedIngredients.map((ingredient) => ingredient.id),
   );
+  const [dietTypeSearch, setDietTypeSearch] = useState("");
+  const [allergicIngredientSearch, setAllergicIngredientSearch] = useState("");
+  const [dislikedIngredientSearch, setDislikedIngredientSearch] = useState("");
+
+  const dietTypeOptions = dietTypes.data ?? profile.dietary.preferredDietTypes;
+  const ingredientOptions =
+    ingredients.data ??
+    [...profile.dietary.allergicIngredients, ...profile.dietary.dislikedIngredients];
+
   const update = useMutation({
     mutationFn: () =>
       api.updateProfile({
@@ -65,7 +72,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
   };
 
   return (
-    <Card as={Form} className="mt-8 max-w-2xl space-y-5" onSubmit={submit}>
+    <Card as={Form} sx={{ mt: 4, maxWidth: 672, gap: 2.5 }} onSubmit={submit}>
       <FormField label="Display name">
         <Input
           value={displayName}
@@ -78,7 +85,7 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
         label="Email"
         hint="Email changes are managed by authentication settings."
       >
-        <Input className="bg-slate-50" value={profile.email} disabled />
+        <Input sx={{ bgcolor: "grey.50" }} value={profile.email} disabled />
       </FormField>
       <FormField label="About you">
         <Textarea
@@ -107,57 +114,99 @@ function ProfileForm({ profile }: { profile: UserProfile }) {
       </FormField>
       <FormField
         label="Preferred diet types"
-        hint="Use Ctrl or Cmd to select more than one."
+        hint="Search for a diet type, then add it to your preferences."
       >
-        <Select
-          multiple
-          className="min-h-32"
-          value={preferredDietTypeIds}
+        <MultiSelectCombobox
+          label="Search diet types"
+          value={dietTypeSearch}
+          onChange={setDietTypeSearch}
+          selectedOptions={dietTypeOptions
+            .filter((dietType) => preferredDietTypeIds.includes(dietType.id))
+            .map((dietType) => ({ id: dietType.id, label: dietType.name }))}
+          options={dietTypeOptions
+            .filter((dietType) => !preferredDietTypeIds.includes(dietType.id))
+            .filter((dietType) =>
+              dietType.name
+                .toLocaleLowerCase()
+                .includes(dietTypeSearch.toLocaleLowerCase()),
+            )
+            .map((dietType) => ({ id: dietType.id, label: dietType.name }))}
           disabled={dietTypes.isPending || dietTypes.isError}
-          onChange={(event) => setPreferredDietTypeIds(selectedValues(event))}
-        >
-          {dietTypes.data?.map((dietType) => (
-            <Option key={dietType.id} value={dietType.id}>
-              {dietType.name}
-            </Option>
-          ))}
-        </Select>
+          loading={dietTypes.isFetching}
+          resultsLabel="Diet type results"
+          onAdd={(dietType) =>
+            setPreferredDietTypeIds((ids) => [...ids, dietType.id])
+          }
+          onRemove={(dietType) =>
+            setPreferredDietTypeIds((ids) =>
+              ids.filter((id) => id !== dietType.id),
+            )
+          }
+        />
       </FormField>
       <FormField
         label="Allergic ingredients"
-        hint="Use Ctrl or Cmd to select more than one."
+        hint="Search for an ingredient, then add it to your allergies."
       >
-        <Select
-          multiple
-          className="min-h-32"
-          value={allergicIngredientIds}
+        <MultiSelectCombobox
+          label="Search allergic ingredients"
+          value={allergicIngredientSearch}
+          onChange={setAllergicIngredientSearch}
+          selectedOptions={ingredientOptions
+            .filter((ingredient) => allergicIngredientIds.includes(ingredient.id))
+            .map((ingredient) => ({ id: ingredient.id, label: ingredient.name }))}
+          options={ingredientOptions
+            .filter((ingredient) => !allergicIngredientIds.includes(ingredient.id))
+            .filter((ingredient) =>
+              ingredient.name
+                .toLocaleLowerCase()
+                .includes(allergicIngredientSearch.toLocaleLowerCase()),
+            )
+            .map((ingredient) => ({ id: ingredient.id, label: ingredient.name }))}
           disabled={ingredients.isPending || ingredients.isError}
-          onChange={(event) => setAllergicIngredientIds(selectedValues(event))}
-        >
-          {ingredients.data?.map((ingredient) => (
-            <Option key={ingredient.id} value={ingredient.id}>
-              {ingredient.name}
-            </Option>
-          ))}
-        </Select>
+          loading={ingredients.isFetching}
+          resultsLabel="Ingredient results"
+          onAdd={(ingredient) =>
+            setAllergicIngredientIds((ids) => [...ids, ingredient.id])
+          }
+          onRemove={(ingredient) =>
+            setAllergicIngredientIds((ids) =>
+              ids.filter((id) => id !== ingredient.id),
+            )
+          }
+        />
       </FormField>
       <FormField
         label="Disliked ingredients"
-        hint="Use Ctrl or Cmd to select more than one."
+        hint="Search for an ingredient, then add it to your dislikes."
       >
-        <Select
-          multiple
-          className="min-h-32"
-          value={dislikedIngredientIds}
+        <MultiSelectCombobox
+          label="Search disliked ingredients"
+          value={dislikedIngredientSearch}
+          onChange={setDislikedIngredientSearch}
+          selectedOptions={ingredientOptions
+            .filter((ingredient) => dislikedIngredientIds.includes(ingredient.id))
+            .map((ingredient) => ({ id: ingredient.id, label: ingredient.name }))}
+          options={ingredientOptions
+            .filter((ingredient) => !dislikedIngredientIds.includes(ingredient.id))
+            .filter((ingredient) =>
+              ingredient.name
+                .toLocaleLowerCase()
+                .includes(dislikedIngredientSearch.toLocaleLowerCase()),
+            )
+            .map((ingredient) => ({ id: ingredient.id, label: ingredient.name }))}
           disabled={ingredients.isPending || ingredients.isError}
-          onChange={(event) => setDislikedIngredientIds(selectedValues(event))}
-        >
-          {ingredients.data?.map((ingredient) => (
-            <Option key={ingredient.id} value={ingredient.id}>
-              {ingredient.name}
-            </Option>
-          ))}
-        </Select>
+          loading={ingredients.isFetching}
+          resultsLabel="Ingredient results"
+          onAdd={(ingredient) =>
+            setDislikedIngredientIds((ids) => [...ids, ingredient.id])
+          }
+          onRemove={(ingredient) =>
+            setDislikedIngredientIds((ids) =>
+              ids.filter((id) => id !== ingredient.id),
+            )
+          }
+        />
       </FormField>
       <Button type="submit" disabled={update.isPending}>
         {update.isPending ? "Saving…" : "Save profile"}
@@ -182,7 +231,7 @@ export function SettingsPage() {
   return (
     <Page>
       <Heading>Profile and food preferences</Heading>
-      <Text className="mt-2" variant="muted">
+      <Text sx={{ mt: 1 }} variant="muted">
         Personalize recipe suggestions and flag ingredients you avoid.
       </Text>
       <ProfileForm profile={profile.data} />

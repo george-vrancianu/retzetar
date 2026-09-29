@@ -4,22 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "lint": "oxlint src vite.mjs",
+    "lint": "oxlint src",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"*.{css,md}\""
   },
   "exports": {
-    ".": "./src/index.tsx",
-    "./styles.css": "./styles.css",
-    "./vite": {
-      "types": "./vite.d.mts",
-      "default": "./vite.mjs"
-    }
+    ".": "./src/index.tsx"
   },
   "peerDependencies": {
-    "react": "^19.2.8"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.3.3",
-    "tailwindcss": "^4.3.3"
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.4.0"
   }
 }

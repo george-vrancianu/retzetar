@@ -48,20 +48,20 @@ export function AuthPage() {
     <CenteredLayout>
       <Card
         as="section"
-        className="w-full max-w-md p-8"
+        sx={{ width: "100%", maxWidth: 448, p: 4 }}
         aria-labelledby="auth-title"
       >
         <ActionLink as={Link} to="/recipes">
           ← Browse recipes
         </ActionLink>
-        <Heading id="auth-title" className="mt-6">
+        <Heading id="auth-title" sx={{ mt: 3 }}>
           {mode === "sign-in" ? "Welcome back" : "Create your account"}
         </Heading>
-        <Text className="mt-2" variant="muted">
+        <Text sx={{ mt: 1 }} variant="muted">
           Plan meals around what you already have.
         </Text>
-        {error && <Alert className="mt-4">{error}</Alert>}
-        <Form className="mt-6" onSubmit={(event) => void submit(event)}>
+        {error && <Alert sx={{ mt: 2 }}>{error}</Alert>}
+        <Form sx={{ mt: 3 }} onSubmit={(event) => void submit(event)}>
           {mode === "sign-up" && (
             <FormField label="Name">
               <Input
@@ -105,7 +105,7 @@ export function AuthPage() {
           type="button"
           variant="text"
           block
-          className="mt-5 text-sm"
+          sx={{ mt: 2.5, fontSize: "0.875rem" }}
           onClick={() => {
             setError("");
             setMode(mode === "sign-in" ? "sign-up" : "sign-in");

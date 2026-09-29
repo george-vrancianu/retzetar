@@ -45,7 +45,11 @@ export function AppLayout() {
           </ActionLink>
           <Navigation
             aria-label="Main navigation"
-            className="order-3 w-full overflow-x-auto sm:order-2 sm:w-auto"
+            sx={{
+              order: { xs: 3, sm: 2 },
+              width: { xs: "100%", sm: "auto" },
+              overflowX: "auto",
+            }}
           >
             {navigation
               .filter(([, path]) => session.data || path === "/recipes")
@@ -60,12 +64,16 @@ export function AppLayout() {
               </ActionLink>
             )}
           </Navigation>
-          <FlexRow className="order-2 sm:order-3">
+          <FlexRow sx={{ order: { xs: 2, sm: 3 } }}>
             {session.data ? (
               <Button
                 type="button"
                 variant="text"
-                className="text-sm text-slate-600 hover:text-herb-700"
+                sx={{
+                  fontSize: "0.875rem",
+                  color: "text.secondary",
+                  "&:hover": { color: "primary.main" },
+                }}
                 onClick={() => void signOut()}
               >
                 Sign out

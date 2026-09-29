@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Button, SearchCombobox } from "@retzetar/ui";
+import { Button, RetzetarUiProvider, SearchCombobox } from "@retzetar/ui";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -21,10 +21,14 @@ function ComboboxHarness({ onSelect }: { onSelect: (id: string) => void }) {
 }
 
 describe("shared UI primitives", () => {
-  it("appends consumer classes after component classes", () => {
-    render(<Button className="custom-class">Save</Button>);
-    expect(screen.getByRole("button", { name: "Save" }).className).toMatch(
-      /font-semibold.*custom-class$/,
+  it("maps shared variants to Material UI components", () => {
+    render(
+      <RetzetarUiProvider>
+        <Button variant="secondary">Save</Button>
+      </RetzetarUiProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Save" })).toHaveClass(
+      "MuiButton-outlined",
     );
   });
 

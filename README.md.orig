@@ -31,8 +31,6 @@ PostgreSQL is required at runtime. Docker is an optional way to run it on machin
 
 The web app defaults to `http://localhost:3000` for the API. Put `VITE_API_URL` in `apps/web/.env` when the API uses a different origin.
 
-For LAN development, Vite listens on every interface at port `5173`, and the API listens on every interface at port `3000`. Set `CLIENT_ORIGIN` and `BETTER_AUTH_URL` in `apps/api/.env.local` to the host's LAN address (for example, `http://192.168.1.128:5173` and `http://192.168.1.128:3000`). Leave `VITE_API_URL` unset so browsers use the API at the same LAN hostname.
-
 ## Environment variables
 
 | Variable             | Required             | Purpose                                                         |
@@ -47,8 +45,6 @@ For LAN development, Vite listens on every interface at port `5173`, and the API
 | `AI_BASE_URL`        | Compatible providers | Provider API root ending in `/v1`; omitted for OpenAI           |
 | `PORT`               | No                   | API port; defaults to `3000`                                    |
 | `VITE_API_URL`       | No                   | Browser-visible API origin; defaults to `http://localhost:3000` |
-
-Pantry image scans use a provider-neutral structured-output client. Set `AI_PROVIDER=openai-compatible` with `AI_BASE_URL`, `AI_API_KEY`, and `AI_VISION_MODEL` to use a vendor that supports OpenAI-compatible Chat Completions, image inputs, and JSON-schema response formats. Existing `OPENAI_API_KEY` and `OPENAI_VISION_MODEL` variables remain supported as deprecated aliases.
 
 ## Commands
 

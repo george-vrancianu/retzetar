@@ -26,7 +26,10 @@ export function PantrySummary() {
   return (
     <Text variant="metric">
       {query.data.length}{" "}
-      <Text as="span" className="text-base font-medium text-slate-600">
+      <Text
+        as="span"
+        sx={{ fontSize: "1rem", fontWeight: 500, color: "text.secondary" }}
+      >
         items ready
       </Text>
     </Text>
@@ -86,7 +89,7 @@ export function FavoriteSummary() {
     />
   ) : (
     <Text>
-      <Text as="strong" className="text-3xl text-herb-700">
+      <Text as="strong" sx={{ fontSize: "1.875rem", color: "primary.main" }}>
         {query.data.length}
       </Text>{" "}
       saved recipes

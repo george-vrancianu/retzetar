@@ -23,11 +23,14 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       config.get('CLIENT_ORIGIN', { infer: true }),
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
       'http://localhost:5174',
       'http://127.0.0.1:5174',
-      /^http:\/\/192\.168\.1\.(?:25[0-5]|2[0-4]\d|1?\d?\d):5174$/,
+      /^http:\/\/(?:10\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|192\.168\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)|172\.(?:1[6-9]|2\d|3[0-1])\.(?:25[0-5]|2[0-4]\d|1?\d?\d)\.(?:25[0-5]|2[0-4]\d|1?\d?\d)):(?:5173|5174)$/,
     ],
     credentials: true,
+    methods: "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS",
   });
 
   const swaggerConfig = new DocumentBuilder()
@@ -47,7 +50,7 @@ async function bootstrap() {
 
   const port = config.get('PORT', { infer: true });
   await app.listen(port, '0.0.0.0');
-  Logger.log(`API listening on http://localhost:${port}/api`, 'Bootstrap');
+  Logger.log(`API listening on port ${port} (all interfaces)`, 'Bootstrap');
 }
 
 void bootstrap();

@@ -40,12 +40,18 @@ export function RecipesPage() {
     <Page>
       <Card variant="hero">
         <Text variant="eyebrow">Cook with confidence</Text>
-        <Heading variant="display" className="mt-2 max-w-2xl">
+        <Heading variant="display" sx={{ mt: 1, maxWidth: 672 }}>
           Find your next recipe
         </Heading>
         <Form
           spacing="none"
-          className="mt-6 flex max-w-xl flex-col gap-2 sm:flex-row"
+          sx={{
+            mt: 3,
+            maxWidth: 576,
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 1,
+          }}
           role="search"
           onSubmit={submit}
         >
@@ -54,7 +60,11 @@ export function RecipesPage() {
           </VisuallyHidden>
           <Input
             id="recipe-search"
-            className="text-slate-900"
+            sx={{
+              color: "text.primary",
+              bgcolor: "background.paper",
+              borderRadius: 1,
+            }}
             type="search"
             placeholder="Try pasta, soup, or quick dinner"
             value={input}
@@ -98,7 +108,7 @@ export function RecipesPage() {
           />
         ) : (
           <>
-            <Text className="mb-4" variant="subtle">
+            <Text sx={{ mb: 2 }} variant="subtle">
               {query.data.pagination.total} recipes
             </Text>
             <Grid>
@@ -109,7 +119,7 @@ export function RecipesPage() {
             {query.data.pagination.pages > 1 && (
               <Navigation
                 gap="lg"
-                className="mt-8 items-center justify-center"
+                sx={{ mt: 4, alignItems: "center", justifyContent: "center" }}
                 aria-label="Recipe pages"
               >
                 <Button
@@ -120,7 +130,11 @@ export function RecipesPage() {
                 >
                   Previous
                 </Button>
-                <Text as="span" variant="small" className="text-slate-600">
+                <Text
+                  as="span"
+                  variant="small"
+                  sx={{ color: "text.secondary" }}
+                >
                   Page {page} of {query.data.pagination.pages}
                 </Text>
                 <Button

@@ -41,17 +41,17 @@ const groups = [
   {
     key: "matched",
     label: "High confidence",
-    style: "bg-herb-100 text-herb-700",
+    style: { bgcolor: "primary.light", color: "primary.main" },
   },
   {
     key: "review",
     label: "Review required",
-    style: "bg-amber-100 text-amber-900",
+    style: { bgcolor: "#fef3c7", color: "#78350f" },
   },
   {
     key: "unmatched",
     label: "No catalog match",
-    style: "bg-slate-100 text-slate-600",
+    style: { bgcolor: "grey.100", color: "text.secondary" },
   },
 ] as const;
 
@@ -78,7 +78,7 @@ export function AddPantryPage() {
       <ActionLink as={Link} to="/pantry">
         ← Back to pantry
       </ActionLink>
-      <PageHeader className="mt-4 items-center">
+      <PageHeader sx={{ mt: 2, alignItems: "center" }}>
         <Heading>Add ingredients</Heading>
         <Button
           type="button"
@@ -92,15 +92,22 @@ export function AddPantryPage() {
       </PageHeader>
       <Grid
         variant="sidebar"
-        className="mt-8 lg:grid-cols-[minmax(0,1fr)_19rem]"
+        sx={{ mt: 4, gridTemplateColumns: { lg: "minmax(0,1fr) 19rem" } }}
       >
-        <Section className="min-w-0">
+        <Section sx={{ minWidth: 0 }}>
           <FlexRow gap="sm" wrap>
             {groups.map((group) => (
               <Text
                 as="span"
                 key={group.key}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${group.style}`}
+                sx={{
+                  borderRadius: 99,
+                  px: 1.5,
+                  py: 0.5,
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  ...group.style,
+                }}
               >
                 {group.label} ·{" "}
                 {
@@ -110,20 +117,20 @@ export function AddPantryPage() {
               </Text>
             ))}
           </FlexRow>
-          <Text className="mt-3" variant="subtle">
+          <Text sx={{ mt: 1.5 }} variant="subtle">
             Matches below 80% need confirmation. Unmatched items stay available
             for a manual catalog search.
           </Text>
-          <Card variant="flush" className="mt-4">
+          <Card variant="flush" sx={{ mt: 2 }}>
             <Section
-              className="overflow-x-auto"
+              sx={{ overflowX: "auto" }}
               role="region"
               aria-label="Ingredient review table"
               tabIndex={0}
             >
               <Table aria-label="Ingredients to add">
                 <TableHead>
-                  <TableRow className="bg-slate-50">
+                  <TableRow sx={{ bgcolor: "grey.50" }}>
                     {[
                       "Match",
                       "Product",
@@ -147,11 +154,11 @@ export function AddPantryPage() {
                   if (!items.length) return null;
                   return (
                     <TableBody key={group.key} aria-label={group.label}>
-                      <TableRow className={group.style}>
+                      <TableRow sx={group.style}>
                         <TableHeader
                           colSpan={8}
                           scope="rowgroup"
-                          className="text-inherit"
+                          sx={{ color: "inherit" }}
                         >
                           {group.label} ({items.length})
                         </TableHeader>
@@ -167,7 +174,14 @@ export function AddPantryPage() {
                           status={
                             <Text
                               as="span"
-                              className={`rounded-full px-2 py-1 text-xs font-semibold ${group.style}`}
+                              sx={{
+                                borderRadius: 99,
+                                px: 1,
+                                py: 0.5,
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                ...group.style,
+                              }}
                               title={
                                 item.source === "receipt"
                                   ? "Receipt scan"
@@ -207,7 +221,7 @@ export function AddPantryPage() {
                 })}
                 {manualRows.length > 0 && (
                   <TableBody aria-label="Manual ingredients">
-                    <TableRow className="bg-slate-50">
+                    <TableRow sx={{ bgcolor: "grey.50" }}>
                       <TableHeader colSpan={8} scope="rowgroup">
                         Manual ingredients ({manualRows.length})
                       </TableHeader>
@@ -229,7 +243,7 @@ export function AddPantryPage() {
                     <TableRow>
                       <TableCell
                         colSpan={8}
-                        className="py-12 text-center text-slate-500"
+                        sx={{ py: 6, textAlign: "center", color: "grey.500" }}
                       >
                         Scan a product or receipt, or choose “Add manually” to
                         get started.
@@ -242,7 +256,7 @@ export function AddPantryPage() {
                     key={report.id}
                     aria-label="Excluded receipt lines"
                   >
-                    <TableRow className="bg-slate-100">
+                    <TableRow sx={{ bgcolor: "grey.100" }}>
                       <TableHeader colSpan={8} scope="rowgroup">
                         <FlexRow align="between">
                           <Text as="span">
@@ -268,13 +282,18 @@ export function AddPantryPage() {
                       .map((line) => (
                         <TableRow
                           key={line.lineNumber}
-                          className="bg-slate-50 text-slate-500"
+                          sx={{ bgcolor: "grey.50", color: "grey.500" }}
                         >
                           <TableCell>Excluded</TableCell>
                           <TableCell>
                             <Text
                               as="span"
-                              className="block max-w-48 truncate"
+                              sx={{
+                                display: "block",
+                                maxWidth: 192,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                               title={line.sourceText}
                             >
                               {line.productName || line.sourceText}
@@ -283,7 +302,12 @@ export function AddPantryPage() {
                           <TableCell colSpan={6}>
                             <Text
                               as="span"
-                              className="block max-w-xl truncate"
+                              sx={{
+                                display: "block",
+                                maxWidth: 576,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
                               title={line.matchExplanation}
                             >
                               {line.exclusionReason || line.matchExplanation}

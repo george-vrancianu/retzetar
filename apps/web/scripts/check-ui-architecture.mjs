@@ -49,15 +49,22 @@ for (const file of visitFiles(root)) {
       }
 
       if (
-        statement.moduleSpecifier.text.endsWith(".css") &&
-        (file !== path.join(root, "main.tsx") ||
-          statement.moduleSpecifier.text !== "@retzetar/ui/styles.css")
+        statement.moduleSpecifier.text.endsWith(".css")
       ) {
         const { line, character } = source.getLineAndCharacterOfPosition(
           statement.getStart(source),
         );
         errors.push(
-          `${file}:${line + 1}:${character + 1} CSS may only be imported from @retzetar/ui/styles.css in main.tsx`,
+          `${file}:${line + 1}:${character + 1} CSS imports are forbidden; use the @retzetar/ui theme and sx props`,
+        );
+      }
+
+      if (statement.moduleSpecifier.text.startsWith("@mui/")) {
+        const { line, character } = source.getLineAndCharacterOfPosition(
+          statement.getStart(source),
+        );
+        errors.push(
+          `${file}:${line + 1}:${character + 1} import MUI through @retzetar/ui so product styling stays centralized`,
         );
       }
     }
@@ -77,13 +84,9 @@ for (const file of visitFiles(root)) {
       );
       const nativeElement = /^[a-z]/.test(node.tagName.text);
 
-      if (hasClassName && nativeElement) {
+      if (hasClassName) {
         errors.push(
-          `${file}:${line + 1}:${character + 1} className is forbidden on native <${node.tagName.text}>; use an @retzetar/ui primitive`,
-        );
-      } else if (hasClassName && !uiComponents.has(node.tagName.text)) {
-        errors.push(
-          `${file}:${line + 1}:${character + 1} className may only extend a component imported from @retzetar/ui`,
+          `${file}:${line + 1}:${character + 1} className is forbidden; use a semantic @retzetar/ui variant or the sx prop`,
         );
       }
 
@@ -100,8 +103,8 @@ for (const file of visitFiles(root)) {
 }
 
 const mainSource = fs.readFileSync(path.join(root, "main.tsx"), "utf8");
-if (!mainSource.includes('import "@retzetar/ui/styles.css"')) {
-  errors.push("src/main.tsx must import @retzetar/ui/styles.css exactly once");
+if (!mainSource.includes("RetzetarUiProvider")) {
+  errors.push("src/main.tsx must wrap the app in RetzetarUiProvider");
 }
 
 if (errors.length > 0) {

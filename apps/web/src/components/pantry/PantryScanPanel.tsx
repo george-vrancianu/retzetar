@@ -6,6 +6,7 @@ import {
   FormField,
   Heading,
   Input,
+  PhotoPicker,
   Text,
 } from "@retzetar/ui";
 import { useState } from "react";
@@ -18,21 +19,23 @@ function PhotoInput({
   hint,
   file,
   onChange,
+  uploading,
 }: {
   label: string;
   hint: string;
   file: File | null;
   onChange: (file: File | null) => void;
+  uploading?: boolean;
 }) {
   return (
-    <FormField label={label} hint={file ? `Selected: ${file.name}` : hint}>
-      <Input
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        capture="environment"
-        onChange={(event) => onChange(event.target.files?.[0] ?? null)}
-      />
-    </FormField>
+    <PhotoPicker
+      label={label}
+      hint={hint}
+      files={file ? [file] : []}
+      onFilesChange={(files) => onChange(files[0] ?? null)}
+      uploading={uploading}
+      statusLabel="Reading photo…"
+    />
   );
 }
 
@@ -45,10 +48,12 @@ export function PantryScanPanel() {
   );
   const [productOpen, setProductOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [productPhoto, setProductPhoto] = useState<File | null>(null);
   const [expiryPhoto, setExpiryPhoto] = useState<File | null>(null);
   const [expiresOn, setExpiresOn] = useState("");
   const [receiptPhoto, setReceiptPhoto] = useState<File | null>(null);
+  const [ingredientsPhoto, setIngredientsPhoto] = useState<File | null>(null);
 
   const productScan = useMutation({
     mutationFn: async ({
@@ -135,16 +140,31 @@ export function PantryScanPanel() {
     },
   });
 
+  const ingredientsScan = useMutation({
+    mutationFn: async (photo: File) => api.scanIngredients({ ingredientsImage: await prepareImage(photo) }),
+    onSuccess: (result) => {
+      addIngredients(result.items.map((item) => ({
+        source: "ingredients" as const, productName: item.productName, productType: item.productType,
+        matchedIngredientId: item.matchedIngredientId, matchedIngredientName: item.matchedIngredientName,
+        matchedIngredientDefaultUnit: item.matchedIngredientDefaultUnit, matchedCategory: item.matchedCategory,
+        matchConfidence: item.matchConfidence, fallbackIngredientName: item.fallbackIngredientName,
+        quantity: 1, unit: "item", expiresOn: "", confidence: item.confidence,
+      })));
+      setIngredientsPhoto(null);
+    },
+  });
+
+
   return (
     <Card>
       <Heading level={2} variant="card">
         Scan groceries
       </Heading>
-      <Text className="mt-2" variant="subtle">
+      <Text sx={{ mt: 1 }} variant="subtle">
         Scan one packaged product or extract all food items from a receipt.
       </Text>
       <Button
-        className="mt-4"
+        sx={{ mt: 2 }}
         block
         type="button"
         variant="secondary"
@@ -154,7 +174,7 @@ export function PantryScanPanel() {
         {productOpen ? "Hide product scanner" : "Scan product"}
       </Button>
       {productOpen && (
-        <Card variant="compact" className="mt-4 space-y-4">
+        <Card variant="compact" sx={{ mt: 2, display: "grid", gap: 2 }}>
           <Heading level={3} variant="card">
             Product scanner
           </Heading>
@@ -167,12 +187,14 @@ export function PantryScanPanel() {
             hint="Show the front label clearly."
             file={productPhoto}
             onChange={setProductPhoto}
+            uploading={productScan.isPending}
           />
           <PhotoInput
             label="2. Expiry date photo"
             hint="Focus on the use-by or best-before stamp."
             file={expiryPhoto}
             onChange={setExpiryPhoto}
+            uploading={productScan.isPending}
           />
           <FormField label="Or enter expiry date manually">
             <Input
@@ -210,8 +232,25 @@ export function PantryScanPanel() {
         </Card>
       )}
 
+
+      <Button sx={{ mt: 1.5 }} block type="button" variant="secondary" aria-expanded={ingredientsOpen} onClick={() => setIngredientsOpen((open) => !open)}>
+        {ingredientsOpen ? "Hide ingredient scanner" : "Scan ingredients"}
+      </Button>
+      {ingredientsOpen && (
+        <Card variant="compact" sx={{ mt: 2, display: "grid", gap: 2 }}>
+          <Heading level={3} variant="card">Ingredient photo scanner</Heading>
+          <Text variant="subtle">Photograph several groceries or ingredients together. Each visible food item will be matched to the catalog and added for review.</Text>
+          <PhotoInput label="Ingredients photo" hint="Use a clear, well-lit photo with product labels visible." file={ingredientsPhoto} onChange={setIngredientsPhoto} uploading={ingredientsScan.isPending} />
+          <Button block type="button" disabled={!ingredientsPhoto || ingredientsScan.isPending} onClick={() => { if (ingredientsPhoto) ingredientsScan.mutate(ingredientsPhoto); }}>
+            {ingredientsScan.isPending ? "Reading ingredients..." : "Read ingredients"}
+          </Button>
+          {ingredientsScan.isError && <Alert>The ingredient photo could not be read. Please try a clearer photo.</Alert>}
+          {ingredientsScan.data && <Alert variant="info">{ingredientsScan.data.items.length === 0 ? "No grocery items were found in this photo." : ingredientsScan.data.items.length + " grocery item" + (ingredientsScan.data.items.length === 1 ? "" : "s") + " added to the review table."}</Alert>}
+        </Card>
+      )}
+
       <Button
-        className="mt-3"
+        sx={{ mt: 1.5 }}
         block
         type="button"
         variant="secondary"
@@ -221,7 +260,7 @@ export function PantryScanPanel() {
         {receiptOpen ? "Hide receipt scanner" : "Scan receipt"}
       </Button>
       {receiptOpen && (
-        <Card variant="compact" className="mt-4 space-y-4">
+        <Card variant="compact" sx={{ mt: 2, display: "grid", gap: 2 }}>
           <Heading level={3} variant="card">
             Receipt scanner
           </Heading>
@@ -234,6 +273,7 @@ export function PantryScanPanel() {
             hint="Keep the receipt flat, well lit, and readable."
             file={receiptPhoto}
             onChange={setReceiptPhoto}
+            uploading={receiptScan.isPending}
           />
           <Button
             block

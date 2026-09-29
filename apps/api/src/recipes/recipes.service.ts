@@ -56,6 +56,12 @@ export class RecipesService {
     };
   }
 
+  async plateCandidates() {
+    const recipeRows = await this.database.select({ id: recipes.id, title: recipes.title, description: recipes.description }).from(recipes).where(eq(recipes.published, true)).orderBy(recipes.title).limit(200);
+    const ingredientRows = await this.database.select({ recipeId: recipeIngredients.recipeId, name: ingredients.name }).from(recipeIngredients).innerJoin(ingredients, eq(recipeIngredients.ingredientId, ingredients.id));
+    return recipeRows.map((recipe) => ({ ...recipe, ingredients: ingredientRows.filter((ingredient) => ingredient.recipeId === recipe.id).map((ingredient) => ingredient.name) }));
+  }
+
   listDietTypes() {
     return this.database
       .select({ id: dietTypes.id, name: dietTypes.name })

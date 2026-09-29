@@ -5,10 +5,12 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { CurrentUser as User } from '../auth/auth.types';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import {
+  addCartItemsSchema,
   cartIdSchema,
   cartRecipeParamsSchema,
   createCartSchema,
   type CreateCartInput,
+  type AddCartItemsInput,
 } from './carts.schemas';
 import { CartsService } from './carts.service';
 
@@ -38,6 +40,15 @@ export class CartsController {
     @Param(new ZodValidationPipe(cartIdSchema)) params: { id: string },
   ) {
     return this.carts.get(user.id, params.id);
+  }
+
+  @Post(':id/items')
+  addItems(
+    @CurrentUser() user: User,
+    @Param(new ZodValidationPipe(cartIdSchema)) params: { id: string },
+    @Body(new ZodValidationPipe(addCartItemsSchema)) input: AddCartItemsInput,
+  ) {
+    return this.carts.addItems(user.id, params.id, input);
   }
 
   @Post(':id/recipes/:recipeId/missing-ingredients')

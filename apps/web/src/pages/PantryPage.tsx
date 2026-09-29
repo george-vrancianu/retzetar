@@ -45,13 +45,13 @@ export function PantryPage() {
 
   return (
     <Page>
-      <PageHeader className="items-center">
+      <PageHeader sx={{ alignItems: "center" }}>
         <Heading>Your pantry</Heading>
         <ActionLink as={Link} to="/pantry/add" variant="primary">
           + Add ingredients
         </ActionLink>
       </PageHeader>
-      <Text className="mt-2" variant="muted">
+      <Text sx={{ mt: 1 }} variant="muted">
         Track ingredients and their expiry dates so carts only include what is
         missing.
       </Text>
@@ -71,7 +71,7 @@ export function PantryPage() {
               <Card as="li" key={item.id}>
                 <FlexRow align="between" gap="lg">
                   <FlexCol gap="none">
-                    <Text className="font-bold">{item.name}</Text>
+                    <Text sx={{ fontWeight: 700 }}>{item.name}</Text>
                     <Text variant="subtle">Category: {item.category}</Text>
                     {item.name !== item.ingredientName && (
                       <Text variant="subtle">
@@ -82,7 +82,7 @@ export function PantryPage() {
                       {item.quantity} {item.unit}
                     </Text>
                     {item.expiresAt && (
-                      <Text className="mt-1" variant="subtle">
+                      <Text sx={{ mt: 0.5 }} variant="subtle">
                         {expiryLabel(item.expiresAt)}
                       </Text>
                     )}
@@ -90,7 +90,7 @@ export function PantryPage() {
                   <Button
                     type="button"
                     variant="danger"
-                    className="text-sm"
+                    sx={{ fontSize: "0.875rem" }}
                     disabled={remove.isPending}
                     onClick={() => remove.mutate(item.id)}
                   >

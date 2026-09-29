@@ -14,6 +14,8 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import type { CurrentUser as User } from '../auth/auth.types';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { UsersService } from '../users/users.service';
+import { ingredientsScanSchema, type IngredientsScanInput } from './ingredients-scan.schemas';
+import { IngredientsScanService } from './ingredients-scan.service';
 import {
   pantryIdSchema,
   pantryItemSchema,
@@ -22,6 +24,7 @@ import {
   type PantryUpdateInput,
 } from './pantry.schemas';
 import { PantryService } from './pantry.service';
+import { PlateScanService, plateRecipeSchema, plateScanSchema } from './plate-scan.service';
 import {
   productScanSchema,
   type ProductScanInput,
@@ -42,6 +45,8 @@ export class PantryController {
     private readonly pantry: PantryService,
     private readonly productScan: ProductScanService,
     private readonly receiptScan: ReceiptScanService,
+    private readonly ingredientsScan: IngredientsScanService,
+    private readonly plateScan: PlateScanService,
     private readonly users: UsersService,
   ) {}
 
@@ -72,6 +77,26 @@ export class PantryController {
     @Body(new ZodValidationPipe(receiptScanSchema)) input: ReceiptScanInput,
   ) {
     return this.receiptScan.analyze(input, await this.users.getLocale(user.id));
+  }
+
+  @Post('scan-ingredients')
+  async scanIngredients(
+    @CurrentUser() user: User,
+    @Body(new ZodValidationPipe(ingredientsScanSchema)) input: IngredientsScanInput,
+  ) {
+    return this.ingredientsScan.analyze(input, await this.users.getLocale(user.id));
+  }
+
+  @Post('scan-plate')
+  scanPlate(@Body(new ZodValidationPipe(plateScanSchema)) input: { plateImage: string }) {
+    return this.plateScan.findRecipes(input);
+  }
+
+  @Post('scan-plate/ingredients')
+  scanPlateIngredients(
+    @Body(new ZodValidationPipe(plateRecipeSchema)) input: { recipeTitle: string },
+  ) {
+    return this.plateScan.findIngredients(input.recipeTitle);
   }
 
   @Patch(':id')

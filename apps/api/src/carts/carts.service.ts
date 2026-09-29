@@ -10,7 +10,7 @@ import {
   recipeIngredients,
   recipes,
 } from '../database/schema';
-import type { CreateCartInput } from './carts.schemas';
+import type { AddCartItemsInput, CreateCartInput } from './carts.schemas';
 import { calculateMissingIngredients } from './missing-ingredients';
 
 @Injectable()
@@ -57,6 +57,16 @@ export class CartsService {
       .where(eq(cartItems.cartId, id))
       .orderBy(ingredients.name);
     return { ...cart, items };
+  }
+
+  async addItems(userId: string, cartId: string, input: AddCartItemsInput) {
+    const cart = await this.database.select({ id: carts.id }).from(carts).where(and(eq(carts.id, cartId), eq(carts.userId, userId))).limit(1);
+    if (!cart[0]) throw new NotFoundException('Cart not found');
+    await this.database.transaction(async (transaction) => {
+      for (const item of input.items) await transaction.insert(cartItems).values({ cartId, ingredientId: item.ingredientId, quantity: item.quantity, unit: item.unit }).onConflictDoUpdate({ target: [cartItems.cartId, cartItems.ingredientId, cartItems.unit], set: { quantity: sql.raw('cart_items.quantity + excluded.quantity'), updatedAt: new Date() } });
+      await transaction.update(carts).set({ updatedAt: new Date() }).where(eq(carts.id, cartId));
+    });
+    return this.get(userId, cartId);
   }
 
   async addRecipeMissingIngredients(

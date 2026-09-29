@@ -241,6 +241,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  scanIngredients: (input: { ingredientsImage: string }) =>
+    request<{ items: Array<{ productName: string; productType: string; matchedIngredientId: string | null; matchedIngredientName: string | null; matchedIngredientDefaultUnit: string | null; matchedCategory: string | null; matchConfidence: number; fallbackIngredientName: string; confidence: number }> }>("/pantry/scan-ingredients", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  scanPlate: (input: { plateImage: string }) => request<{ matches: Array<{ title: string; confidence: number }> }>("/pantry/scan-plate", { method: "POST", body: JSON.stringify(input) }),
+  scanPlateIngredients: (recipeTitle: string) => request<{ items: Array<{ productName: string; productType: string; matchedIngredientId: string | null; matchedIngredientName: string | null; matchedIngredientDefaultUnit: string | null; matchedCategory: string | null; matchConfidence: number; fallbackIngredientName: string; quantity: number | null; unit: string | null; confidence: number }> }>("/pantry/scan-plate/ingredients", { method: "POST", body: JSON.stringify({ recipeTitle }) }),
+  addCartItems: (id: string, input: { items: Array<{ ingredientId: string; quantity: number; unit: string }> }) => request<Cart>("/carts/" + id + "/items", { method: "POST", body: JSON.stringify(input) }),
   removePantry: (id: string) =>
     request<{ id: string }>(`/pantry/${id}`, { method: "DELETE" }),
   favorites: () =>

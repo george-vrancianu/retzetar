@@ -24,6 +24,7 @@ import {
   LoadingState,
 } from "../components/QueryState.tsx";
 import { api } from "../lib/api.ts";
+import { CartPlateScan } from "../components/carts/CartPlateScan.tsx";
 
 function CartList() {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ function CartList() {
   return (
     <Page>
       <Heading>Shopping carts</Heading>
-      <Grid variant="sidebar" className="mt-8 lg:grid-cols-[1fr_22rem]">
+      <Grid variant="sidebar" sx={{ mt: 4 }}>
         <Section>
           {carts.isPending ? (
             <LoadingState />
@@ -62,13 +63,13 @@ function CartList() {
                 <Card as="li" key={cart.id}>
                   <ActionLink
                     as={Link}
-                    className="text-lg"
+                    sx={{ fontSize: "1.125rem" }}
                     to={`/carts/${cart.id}`}
                     variant="title"
                   >
                     {cart.name}
                   </ActionLink>
-                  <Text className="capitalize" variant="subtle">
+                  <Text sx={{ textTransform: "capitalize" }} variant="subtle">
                     {cart.status}
                   </Text>
                 </Card>
@@ -80,7 +81,7 @@ function CartList() {
           <Heading level={2} variant="card">
             New cart
           </Heading>
-          <FormField className="mt-4" label="Name">
+          <FormField sx={{ mt: 2 }} label="Name">
             <Input
               value={name}
               maxLength={80}
@@ -89,7 +90,7 @@ function CartList() {
             />
           </FormField>
           <Button
-            className="mt-4"
+            sx={{ mt: 2 }}
             block
             type="submit"
             disabled={create.isPending}
@@ -97,7 +98,7 @@ function CartList() {
             Create cart
           </Button>
           {create.isError && (
-            <Alert className="mt-3">Could not create the cart.</Alert>
+            <Alert sx={{ mt: 1.5 }}>Could not create the cart.</Alert>
           )}
         </Card>
       </Grid>
@@ -123,7 +124,8 @@ function CartDetail({ id }: { id: string }) {
       <ActionLink as={Link} to="/carts">
         ← All carts
       </ActionLink>
-      <Heading className="mt-5">{cart.data.name}</Heading>
+      <Heading sx={{ mt: 2.5 }}>{cart.data.name}</Heading>
+      <CartPlateScan cartId={id} />
       <Section spacing="lg">
         {!cart.data.items?.length ? (
           <EmptyState
@@ -144,7 +146,7 @@ function CartDetail({ id }: { id: string }) {
                     readOnly
                     aria-label={`${item.name}, ${item.checked ? "complete" : "not complete"}`}
                   />
-                  <Text as="span" className="flex-1" variant="label">
+                  <Text as="span" sx={{ flex: 1 }} variant="label">
                     {item.name}
                   </Text>
                   <Text as="span" variant="muted">

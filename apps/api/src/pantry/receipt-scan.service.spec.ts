@@ -1,6 +1,7 @@
 import { BadGatewayException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../config/env';
+import { StructuredOutputAiService } from '../ai/structured-output-ai.service';
 import { IngredientCatalogService } from '../ingredients/ingredient-catalog.service';
 import { validateCatalogMatch } from '../ingredients/ingredient-catalog';
 import { ReceiptScanService } from './receipt-scan.service';
@@ -54,10 +55,14 @@ describe('ReceiptScanService', () => {
       ],
     };
     service = new ReceiptScanService(
-      {
+      new StructuredOutputAiService({
         get: (key: string) =>
-          key === 'OPENAI_API_KEY' ? 'test-key' : 'gpt-4o-mini',
-      } as ConfigService<AppConfig, true>,
+          ({
+            AI_PROVIDER: 'openai',
+            AI_API_KEY: 'test-key',
+            AI_VISION_MODEL: 'gpt-4o-mini',
+          })[key],
+      } as ConfigService<AppConfig, true>),
       {
         getCatalog: jest.fn().mockResolvedValue(catalog),
         toPrompt: jest.fn().mockReturnValue(JSON.stringify(catalog)),

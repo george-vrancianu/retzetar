@@ -64,26 +64,29 @@ export function RecipeDetailPage() {
       <ActionLink as={Link} to="/recipes">
         ← All recipes
       </ActionLink>
-      <Grid variant="detail" className="mt-5">
+      <Grid variant="detail" sx={{ mt: 2.5 }}>
         <Section>
           {recipe.data.imageUrl && (
             <Media variant="detail" src={recipe.data.imageUrl} alt="" />
           )}
-          <Heading className="mt-6" variant="display">
+          <Heading sx={{ mt: 3 }} variant="display">
             {recipe.data.title}
           </Heading>
-          <Text className="mt-3 text-lg" variant="muted">
+          <Text sx={{ mt: 1.5, fontSize: "1.125rem" }} variant="muted">
             {recipe.data.description}
           </Text>
           <Section spacing="lg">
             <Heading level={2} variant="section">
               Method
             </Heading>
-            <List ordered variant="stack" className="mt-4">
+            <List ordered variant="stack" sx={{ mt: 2, pl: 2.5 }}>
               {recipe.data.steps.map((step) => (
                 <Card as="li" key={step.id}>
                   <FlexRow align="start" gap="lg">
-                    <Text as="span" className="font-black text-herb-700">
+                    <Text
+                      as="span"
+                      sx={{ fontWeight: 900, color: "primary.main" }}
+                    >
                       {step.position}
                     </Text>
                     <Text>{step.instruction}</Text>
@@ -98,7 +101,7 @@ export function RecipeDetailPage() {
             <Heading level={2} variant="card">
               Ingredients
             </Heading>
-            <List variant="compact" className="mt-4">
+            <List variant="compact" sx={{ mt: 2 }}>
               {recipe.data.ingredients.map((item) => (
                 <ListItem key={item.id}>
                   <FlexRow align="between">

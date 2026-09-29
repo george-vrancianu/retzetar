@@ -140,13 +140,13 @@ export function AddPantryIngredientCard({
 
   if (layout === "row") {
     const tones = {
-      matched: "bg-herb-50/60",
-      review: "bg-amber-50/70",
-      unmatched: "bg-slate-50 text-slate-500",
-      manual: "bg-white",
+      matched: { bgcolor: "rgba(220, 235, 221, 0.6)" },
+      review: { bgcolor: "rgba(255, 251, 235, 0.7)" },
+      unmatched: { bgcolor: "grey.50", color: "grey.500" },
+      manual: { bgcolor: "background.paper" },
     };
     return (
-      <TableRow className={tones[tone]} aria-label={title}>
+      <TableRow sx={tones[tone]} aria-label={title}>
         <TableCell>
           {selected && requireReview ? (
             <Text as="span" variant="success">
@@ -158,7 +158,7 @@ export function AddPantryIngredientCard({
         </TableCell>
         <TableCell>
           <Input
-            className="min-w-36"
+            sx={{ minWidth: 144 }}
             aria-label="Product name"
             form={formId}
             value={name}
@@ -170,7 +170,7 @@ export function AddPantryIngredientCard({
           <FlexRow gap="sm">
             <SearchCombobox
               compact
-              className="min-w-44 flex-1"
+              sx={{ minWidth: 176, flex: 1 }}
               label="Find ingredient"
               value={search}
               onChange={(value) => {
@@ -220,13 +220,22 @@ export function AddPantryIngredientCard({
           </FlexRow>
         </TableCell>
         <TableCell>
-          <Text as="span" className="block max-w-32 truncate" title={category}>
+          <Text
+            as="span"
+            sx={{
+              display: "block",
+              maxWidth: 128,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            title={category}
+          >
             {category || "—"}
           </Text>
         </TableCell>
         <TableCell>
           <Input
-            className="w-20"
+            sx={{ width: 80 }}
             aria-label="Quantity"
             placeholder="Required"
             title={
@@ -245,7 +254,7 @@ export function AddPantryIngredientCard({
         </TableCell>
         <TableCell>
           <Input
-            className="w-20"
+            sx={{ width: 80 }}
             aria-label="Unit"
             form={formId}
             value={unit}
@@ -255,7 +264,7 @@ export function AddPantryIngredientCard({
         </TableCell>
         <TableCell>
           <Input
-            className="w-36"
+            sx={{ width: 144 }}
             aria-label="Expiry date"
             form={formId}
             type="date"
@@ -319,14 +328,14 @@ export function AddPantryIngredientCard({
         {title}
       </Heading>
       {description && (
-        <Text className="mt-2" variant="subtle">
+        <Text sx={{ mt: 1 }} variant="subtle">
           {description}
         </Text>
       )}
       <FormField
         label="Name (optional)"
         hint="Use a product or brand name. Leave blank to show the catalog ingredient name."
-        className="mt-4"
+        sx={{ mt: 2 }}
       >
         <Input
           value={name}
@@ -335,7 +344,7 @@ export function AddPantryIngredientCard({
         />
       </FormField>
       <SearchCombobox
-        className="mt-4"
+        sx={{ mt: 2 }}
         label="Find ingredient"
         value={search}
         onChange={(value) => {
@@ -363,7 +372,7 @@ export function AddPantryIngredientCard({
         loading={ingredients.isFetching}
         resultsLabel="Ingredient results"
       />
-      <Grid variant="fields" className="mt-4">
+      <Grid variant="fields" sx={{ mt: 2 }}>
         <FormField label="Quantity">
           <Input
             type="number"
@@ -382,14 +391,14 @@ export function AddPantryIngredientCard({
           />
         </FormField>
       </Grid>
-      <FormField label="Expiry date (optional)" className="mt-4">
+      <FormField label="Expiry date (optional)" sx={{ mt: 2 }}>
         <Input
           type="date"
           value={expiresOn}
           onChange={(event) => setExpiresOn(event.target.value)}
         />
       </FormField>
-      <Grid variant="fields" className="mt-4">
+      <Grid variant="fields" sx={{ mt: 2 }}>
         <Button
           block
           type="submit"
@@ -421,14 +430,14 @@ export function AddPantryIngredientCard({
         )}
       </Grid>
       {add.isError && (
-        <Alert className="mt-3">
+        <Alert sx={{ mt: 1.5 }}>
           {willCreateIngredient
             ? "The ingredient could not be created and added. Check the name and try again."
             : "This ingredient could not be added. Check its details and try again."}
         </Alert>
       )}
       {isAdmin && !selected && search.trim() && (
-        <Text className="mt-3" variant="subtle">
+        <Text sx={{ mt: 1.5 }} variant="subtle">
           {exactMatch
             ? `Submitting will add the existing “${exactMatch.name}” catalog ingredient.`
             : `Submitting will create “${search.trim()}” with ${

@@ -71,7 +71,7 @@ export function DashboardPage() {
       <PageHeader>
         <FlexCol gap="none">
           <Heading>Your kitchen at a glance</Heading>
-          <Text className="mt-2" variant="muted">
+          <Text sx={{ mt: 1 }} variant="muted">
             Pick up where you left off.
           </Text>
         </FlexCol>
@@ -95,12 +95,12 @@ export function DashboardPage() {
         )}
       </PageHeader>
       {save.isError && (
-        <Alert className="mt-4">
+        <Alert sx={{ mt: 2 }}>
           The dashboard layout could not be saved. Your draft is still
           available.
         </Alert>
       )}
-      <Grid variant="two" className="mt-8">
+      <Grid variant="two" sx={{ mt: 4 }}>
         {widgets.map((configuration, index) => {
           const Widget = FRONTEND_WIDGET_REGISTRY[configuration.type];
           const definition = query.data.registry.find(
@@ -109,17 +109,24 @@ export function DashboardPage() {
           return (
             <Card
               as="article"
-              className={editing && !configuration.enabled ? "opacity-60" : ""}
+              sx={
+                editing && !configuration.enabled ? { opacity: 0.6 } : undefined
+              }
               key={configuration.id ?? configuration.type}
             >
               {editing && (
                 <FlexRow
                   wrap
                   gap="sm"
-                  className="mb-4 border-b border-slate-100 pb-4"
+                  sx={{
+                    mb: 2,
+                    borderBottom: 1,
+                    borderColor: "grey.100",
+                    pb: 2,
+                  }}
                 >
                   <Checkbox
-                    className="mr-auto"
+                    sx={{ mr: "auto" }}
                     label="Visible"
                     checked={configuration.enabled}
                     onChange={() => toggleWidget(configuration.type)}
@@ -149,7 +156,7 @@ export function DashboardPage() {
               <Heading level={2} variant="card">
                 {definition?.title ?? configuration.type}
               </Heading>
-              <Text className="mb-4 mt-1" variant="subtle">
+              <Text sx={{ mt: 0.5, mb: 2 }} variant="subtle">
                 {definition?.description}
               </Text>
               {configuration.enabled ? (
